@@ -19,10 +19,10 @@ def read(*parts):
 
 
 setup(
-    name="{{PROJECT_NAME}}",
-    description="{{PROJECT_DESCRIPTION}}",
+    name="disclosure-extractor",
+    description="A data extraction tool from judge financial disclosures.",
     license="BSD",
-    url="https://github.com/freelawproject/{{PROJECT_NAME}}",
+    url="https://github.com/freelawproject/disclosure-extractor",
     version=VERSION,
     author=AUTHOR,
     author_email=EMAIL,
@@ -33,17 +33,16 @@ setup(
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 5 - Development",
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",

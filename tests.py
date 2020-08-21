@@ -10,8 +10,8 @@ import unittest
 from unittest import TestCase
 
 
-class TEMPLATE_TEST(TestCase):
-    """Obey the testing goat."""
+class DisclosureTests(TestCase):
+    """Testing to come soon."""
 
     def test_something(self):
         """A testing template"""
