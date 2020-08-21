@@ -6,12 +6,8 @@ from __future__ import (
     unicode_literals,
 )
 
-from unittest import TestCase
-from io import open
-
 import unittest
-import os
-import re
+from unittest import TestCase
 
 
 class TEMPLATE_TEST(TestCase):
@@ -19,7 +15,7 @@ class TEMPLATE_TEST(TestCase):
 
     def test_something(self):
         """A testing template"""
-        
+
         matches = True
         expected_matches = True
         self.assertEqual(matches, expected_matches)
