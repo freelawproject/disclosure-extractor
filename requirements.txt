@@ -6,7 +6,7 @@ EbookLib==0.17.1
 extract-msg==0.23.1
 IMAPClient==2.1.0
 lxml==4.5.2
-numpy==1.19.1
+numpy
 olefile==0.46
 opencv-python==4.4.0.42
 pdf2image==1.13.1
