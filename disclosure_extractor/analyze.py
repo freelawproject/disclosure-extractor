@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
 
 
 def estimate_net_worth(extracted_data):
+    """
+
+    """
     money = {
         "J": [1, 15000],
         "K": [15001, 50000],
