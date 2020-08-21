@@ -1,0 +1,53 @@
+import codecs
+import os
+from setuptools import setup, find_packages
+from setuptools.command.install import install
+
+VERSION = "0.0.1"
+AUTHOR = "Free Law Project"
+EMAIL = "info@free.law"
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+def read(*parts):
+    """
+    Build an absolute path from *parts* and and return the contents of the
+    resulting file.  Assume UTF-8 encoding.
+    """
+    with codecs.open(os.path.join(HERE, *parts), "rb", "utf-8") as f:
+        return f.read()
+
+
+setup(
+    name="{{PROJECT_NAME}}",
+    description="{{PROJECT_DESCRIPTION}}",
+    license="BSD",
+    url="https://github.com/freelawproject/{{PROJECT_NAME}}",
+    version=VERSION,
+    author=AUTHOR,
+    author_email=EMAIL,
+    maintainer=AUTHOR,
+    maintainer_email=EMAIL,
+    keywords=["legal", "courts"],
+    long_description=read("README.rst"),
+    packages=find_packages(exclude=("tests",)),
+    include_package_data=True,
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
+    install_requires=["six",],
+    test_suite="tests",
+)
