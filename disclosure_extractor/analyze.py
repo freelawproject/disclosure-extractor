@@ -29,4 +29,4 @@ def estimate_net_worth(extracted_data):
         if investments["transaction_value_code"]:
             low.append(money[investments["transaction_value_code"]][0])
             high.append(money[investments["transaction_value_code"]][1])
-    return (sum(low), "to", sum(high))
+    return (sum(low), sum(high))

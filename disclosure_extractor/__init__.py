@@ -124,6 +124,6 @@ def process_financial_document(file=None, url=None, pdf_bytes=None, jw=False):
     # Process: Additional notes pages
 
     net_worth_estimate = estimate_net_worth(extracted_data)
-    logging.info("We estimate a net worth of %s" % net_worth_estimate)
+    logging.info("We estimate a net worth of %s to %s" % net_worth_estimate)
     # return JSON to CL
     return extracted_data
