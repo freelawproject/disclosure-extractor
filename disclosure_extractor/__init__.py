@@ -116,7 +116,7 @@ def process_financial_document(file=None, url=None, pdf_bytes=None, jw=False):
 
     res = []
     for pg_num in invst_pages:
-        value = extract_investments_from_page(pdf_bytes, pg_num)
+        value = extract_investments_from_page(pdf_bytes, pg_num, jw)
         res = res + value
     extracted_data["investments_and_trusts"] = res
 

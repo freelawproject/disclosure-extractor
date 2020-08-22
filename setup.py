@@ -47,6 +47,6 @@ setup(
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    install_requires=["six",],
+    install_requires=["requirements.txt"],
     test_suite="tests",
 )
