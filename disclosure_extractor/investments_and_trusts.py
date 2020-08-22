@@ -31,7 +31,7 @@ def extract_investments_from_page(pdf_bytes, page, jw):
     :param page:
     :return:
     """
-    logging.info("Beginning § VII")
+    logging.info("Processing § VII, page %s" % page)
 
     if jw:
         pdf_page_pil = convert_from_bytes(pdf_bytes, dpi=300)[page]

@@ -62,7 +62,7 @@ def process_financial_document(file=None, url=None, pdf_bytes=None, jw=False):
         res = res + value
     extracted_data["investments_and_trusts"] = res
 
-    """ Process: VIII. Investments and Trusts"""
+    """ Process: VIII. Additional notes pages"""
     # Process: Additional notes pages
 
     net_worth_estimate = estimate_net_worth(extracted_data)

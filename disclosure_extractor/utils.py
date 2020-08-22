@@ -33,14 +33,12 @@ def ocr_column_two(img):
     :param file_path:
     :return:
     """
-    words = []
     for v in [6, 7, 10]:
         text = pytesseract.image_to_string(img, config="--psm %s --oem 3" % v)
         clean_text = text.replace("\n", "").strip().upper()
         if len(clean_text) > 0:
             if clean_text in ["A", "B", "C", "D", "E", "F", "G", "H"]:
                 return text.replace("\n", "").strip()
-        words.append(text.replace("\n", "").strip())
     return text.replace("\n", "").strip()
 
 
@@ -63,7 +61,6 @@ def ocr_variables(slice, column):
             "M",
             "N",
             "O",
-            "PL",
             "P1",
             "P2",
             "P3",
@@ -75,28 +72,25 @@ def ocr_variables(slice, column):
             slice, config="--psm %s --oem 3" % v
         )
         clean_text = text.replace("\n", "").strip().upper().strip(".")
-        if clean_text == "PL":
+        if clean_text == "PL" or clean_text == "PI" or clean_text == "P|":
             return "P1"
         if len(clean_text) > 0:
-            if len(clean_text) == 2:
-                clean_text = clean_text[0]
             if clean_text in possibilities:
                 if len(clean_text) > 0:
                     return clean_text
-    return text.replace("\n", "").strip()
+        if len(clean_text) == 2:
+            return clean_text[0]
+    return text.replace("\n", " ").strip()
 
 
 def erode_table(crop_pil):
     open_cv_image = np.array(crop_pil)
     open_cv_image = open_cv_image[:, :, ::-1].copy()
-    kernel = np.ones((5, 5), np.uint8)
-    img = cv2.erode(open_cv_image, kernel, iterations=1)
+    img = cv2.erode(open_cv_image, np.ones((5, 5), np.uint8), iterations=1)
     # cv2.imwrite("tmp/cropped_table_eroded.png", img)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     im_pil = Image.fromarray(img)
     return im_pil
-
-    # cv2.imwrite("tmp/cropped_table_eroded.png", img)
 
 
 def crop_table(pdf_page_pil):
@@ -109,7 +103,6 @@ def crop_table(pdf_page_pil):
 def extract_cell_rects(pdf, page):
     pdf_page_pil = convert_from_bytes(pdf, dpi=300)[page]
     pdf_pil_crop = pdf_page_pil
-    # pdf_pil_crop = pdf_page_pil.crop((x, y, (x + w), (y + h)))
     open_cv_image = np.array(pdf_pil_crop)
     src = open_cv_image[:, :, ::-1].copy()
 
@@ -290,26 +283,13 @@ def ocr_slice(rx, count):
     data = rx.getdata()
     counts = collections.Counter(data)
     if len(counts) < 50:
-        if count == 6 or count == 7 or count == 3:
-            answer = "|{:<15}".format("")
-        elif (
-            count == 4 or count == 8 or count == 2 or count == 9 or count == 5
-        ):
-            answer = "|{:<6}".format("")
-        elif count == 1:
-            answer = "|{:<60}".format("")
-        elif count == 10:
-            answer = "|{:<15}".format("")
-        return answer
+        return ""
     if count == 1:
         text = ocr_page(rx)
-        text = "|{:<60}".format(text)
     elif count == 6 or count == 10 or count == 7 or count == 3:
         text = ocr_page(rx)
-        text = "|{:<15}".format(text)
     elif count == 4 or count == 8 or count == 2 or count == 9 or count == 5:
         text = ocr_variables(rx, count)
-        text = "|{:<6}".format(text)
     return text
 
 
@@ -362,12 +342,6 @@ def get_row_ranges(img):
         ranges.append((group[0], group[-1]))
     return ranges
 
-
-def erode(image):
-    """
-
-    """
-    return cv2.erode(image, np.ones((5, 5), np.uint8), iterations=1)
 
 
 def find_cells_manually(img):
