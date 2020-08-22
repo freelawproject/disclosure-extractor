@@ -343,7 +343,6 @@ def get_row_ranges(img):
     return ranges
 
 
-
 def find_cells_manually(img):
     """
 
