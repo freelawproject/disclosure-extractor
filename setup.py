@@ -8,6 +8,8 @@ AUTHOR = "Free Law Project"
 EMAIL = "info@free.law"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
 
 def read(*parts):
     """
@@ -47,6 +49,6 @@ setup(
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    install_requires=["requirements.txt"],
+    install_requires=required,
     test_suite="tests",
 )
