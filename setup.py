@@ -8,8 +8,9 @@ AUTHOR = "Free Law Project"
 EMAIL = "info@free.law"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     required = f.read().splitlines()
+
 
 def read(*parts):
     """
