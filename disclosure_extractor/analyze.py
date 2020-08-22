@@ -2,7 +2,7 @@
 
 
 def estimate_net_worth(extracted_data):
-    """
+    """Currenlty only using investment table to calculate net worth
 
     """
     money = {

@@ -32,6 +32,7 @@ def extract_investments_from_page(pdf_bytes, page, jw):
     :return:
     """
     logging.info("Beginning § VII")
+
     if jw:
         pdf_page_pil = convert_from_bytes(pdf_bytes, dpi=300)[page]
         pdf_pil_crop = crop_table(pdf_page_pil=pdf_page_pil)

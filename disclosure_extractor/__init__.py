@@ -19,66 +19,8 @@ from disclosure_extractor.utils import (
     ocr_slice,
     extract_from_page,
     organize_sections,
+    _extract_section_data,
 )
-
-
-def extract_section_data(goto_page, section_info, pdf_image_array):
-    """ Explain what is happening
-
-    # Analyze:
-    # I. Positions
-    # II. Agreements
-    # IIIA. Filer's Non-investment Income
-    # IIIB.  Spouse's Non-investment Income
-    # IV. Reimbursements
-    # V. Gifts
-    # VI. Liabilities
-
-    :param investment_pages:
-    :param section_info:
-    :param pdf_image_array:
-    :return:
-    """
-    locations = []
-    results = []
-    for pg in range(0, goto_page):
-        logging.info("Extracting content on page %s" % pg)
-        r = extract_from_page(pdf_image_array, pg, section_info)
-        locations = locations + r
-
-    logging.info("OCRing content from §§ I to VI")
-    for rect in locations:
-        x, y, w, h, page_num, section, row_index, row_order = rect
-        slice = pdf_image_array[page_num].crop(
-            (x, y - 60, (x + w), (y + h))
-        )  # 60 is a fluctuating number i think
-        text = ocr_slice(slice, 1)
-        a = [
-            "x",
-            "y",
-            "w",
-            "h",
-            "page_num",
-            "section",
-            "row_index",
-            "row_order",
-            "text",
-        ]
-        b = [
-            x,
-            y,
-            w,
-            h,
-            page_num,
-            section,
-            row_index,
-            row_order,
-            text.strip().replace("|", ""),
-        ]
-
-        cd = dict(zip(a, b))
-        results.append(cd)
-    return results
 
 
 def process_financial_document(file=None, url=None, pdf_bytes=None, jw=False):
@@ -109,7 +51,7 @@ def process_financial_document(file=None, url=None, pdf_bytes=None, jw=False):
     section_info, invst_pages = extract_positions(images)
 
     """Process Sections I-VI"""
-    results = extract_section_data(invst_pages[0], section_info, images)
+    results = _extract_section_data(invst_pages[0], section_info, images)
     extracted_data = organize_sections(results)
 
     """ Process: VII. Investments and Trusts"""

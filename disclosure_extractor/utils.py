@@ -103,68 +103,11 @@ def crop_table(pdf_page_pil):
 
     open_cv_image = np.array(pdf_page_pil)
     open_cv_image = open_cv_image[:, :, ::-1].copy()
-
-    hsv = cv2.cvtColor(open_cv_image.copy(), cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([0, 0, 0])
-    upper_blue = np.array([255, 255, 255])
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    result = cv2.bitwise_and(open_cv_image, open_cv_image, mask=mask)
-    b, g, r = cv2.split(result)
-    g = clahe(g, 5, (3, 3))
-
-    # Adaptive Thresholding to isolate the bed
-    img_blur = cv2.blur(g, (9, 9))
-    img_th = cv2.adaptiveThreshold(
-        img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 2
-    )
-
-    contours, hierarchy = cv2.findContours(
-        img_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    rect = cv2.boundingRect(
-        sorted(contours, key=cv2.contourArea, reverse=True)[1]
-    )
-    x, y, w, h = rect
-    x = x - 10
-    y = y - 10
-    w = w + 20
-    h = h + 20
-    # pdf_page_pil.crop((x, y, (x + w), (y + h))).save("tmp/cropped_table.png")
-    return pdf_page_pil.crop((x, y, (x + w), (y + h)))
+    return _crop_image(open_cv_image, pdf_page_pil)
 
 
 def extract_cell_rects(pdf, page):
     pdf_page_pil = convert_from_bytes(pdf, dpi=300)[page]
-    open_cv_image = np.array(pdf_page_pil)
-    open_cv_image = open_cv_image[:, :, ::-1].copy()
-
-    hsv = cv2.cvtColor(open_cv_image.copy(), cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([0, 0, 0])
-    upper_blue = np.array([255, 255, 255])
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    result = cv2.bitwise_and(open_cv_image, open_cv_image, mask=mask)
-    b, g, r = cv2.split(result)
-    g = clahe(g, 5, (3, 3))
-
-    # Adaptive Thresholding to isolate the bed
-    img_blur = cv2.blur(g, (9, 9))
-    img_th = cv2.adaptiveThreshold(
-        img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 2
-    )
-
-    contours, hierarchy = cv2.findContours(
-        img_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    rect = cv2.boundingRect(
-        sorted(contours, key=cv2.contourArea, reverse=True)[1]
-    )
-    x, y, w, h = rect
-    x = x - 10
-    y = y - 10
-    w = w + 20
-    h = h + 20
     pdf_pil_crop = pdf_page_pil
     # pdf_pil_crop = pdf_page_pil.crop((x, y, (x + w), (y + h)))
     open_cv_image = np.array(pdf_pil_crop)
@@ -208,11 +151,7 @@ def extract_cell_rects(pdf, page):
     return locations
 
 
-def extract_cell_rects_from_cropped_table(pdf, page):
-    pdf_page_pil = convert_from_bytes(pdf, dpi=300)[page]
-    open_cv_image = np.array(pdf_page_pil)
-    open_cv_image = open_cv_image[:, :, ::-1].copy()
-
+def _crop_image(open_cv_image, pdf_page_pil):
     hsv = cv2.cvtColor(open_cv_image.copy(), cv2.COLOR_BGR2HSV)
     lower_blue = np.array([0, 0, 0])
     upper_blue = np.array([255, 255, 255])
@@ -239,8 +178,15 @@ def extract_cell_rects_from_cropped_table(pdf, page):
     y = y - 10
     w = w + 20
     h = h + 20
-    # pdf_pil_crop = pdf_page_pil
-    pdf_pil_crop = pdf_page_pil.crop((x, y, (x + w), (y + h)))
+    return pdf_page_pil.crop((x, y, (x + w), (y + h)))
+
+
+def extract_cell_rects_from_cropped_table(pdf, page):
+    pdf_page_pil = convert_from_bytes(pdf, dpi=300)[page]
+    open_cv_image = np.array(pdf_page_pil)
+    open_cv_image = open_cv_image[:, :, ::-1].copy()
+
+    pdf_pil_crop = _crop_image(open_cv_image, pdf_page_pil)
     open_cv_image = np.array(pdf_pil_crop)
     src = open_cv_image[:, :, ::-1].copy()
 
@@ -292,37 +238,6 @@ def rectContains(rect, pt):
 def extract_checkboxes(pdf_page_pil, page_count):
 
     open_cv_image = np.array(pdf_page_pil)
-    open_cv_image = open_cv_image[:, :, ::-1].copy()
-
-    hsv = cv2.cvtColor(open_cv_image.copy(), cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([0, 0, 0])
-    upper_blue = np.array([255, 255, 255])
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    result = cv2.bitwise_and(open_cv_image, open_cv_image, mask=mask)
-    b, g, r = cv2.split(result)
-    g = clahe(g, 5, (3, 3))
-
-    # Adaptive Thresholding to isolate the bed
-    img_blur = cv2.blur(g, (9, 9))
-    img_th = cv2.adaptiveThreshold(
-        img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 51, 2
-    )
-
-    contours, hierarchy = cv2.findContours(
-        img_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    rect = cv2.boundingRect(
-        sorted(contours, key=cv2.contourArea, reverse=True)[1]
-    )
-    x, y, w, h = rect
-    x = x - 10
-    y = y - 10
-    w = w + 20
-    h = h + 20
-    pdf_pil_crop = pdf_page_pil
-    # pdf_pil_crop = pdf_page_pil.crop((x, y, (x + w), (y + h)))
-    open_cv_image = np.array(pdf_pil_crop)
     src = open_cv_image[:, :, ::-1].copy()
 
     # HSV thresholding to get rid of as much background as possible
@@ -399,6 +314,9 @@ def ocr_slice(rx, count):
 
 
 def get_column_ranges(img):
+    """
+
+    """
     img = img.convert("RGBA")
     width, height = img.size
     i = 0
@@ -446,12 +364,17 @@ def get_row_ranges(img):
 
 
 def erode(image):
-    kernel = np.ones((5, 5), np.uint8)
-    return cv2.erode(image, kernel, iterations=1)
+    """
+
+    """
+    return cv2.erode(image, np.ones((5, 5), np.uint8), iterations=1)
 
 
 def find_cells_manually(img):
-    logging.info("Looking")
+    """
+
+    """
+    logging.info("Processing page pixel by pixel")
 
     columns = get_column_ranges(img)
     rows = get_row_ranges(img)
@@ -459,7 +382,7 @@ def find_cells_manually(img):
     if len(rows) != 11:
         logging.info("Failed to parse table, %s columns" % len(rows))
         return None
-
+    logging.info("Found all ten columns.")
     r = []
     while len(rows) > 1:
         r.append((rows[0][1], rows[1][0]))
@@ -730,3 +653,62 @@ def organize_sections(results):
     cd["liabilities"] = liabilities
 
     return cd
+
+
+def _extract_section_data(goto_page, section_info, pdf_image_array):
+    """ Explain what is happening
+
+    # Analyze:
+    # I. Positions
+    # II. Agreements
+    # IIIA. Filer's Non-investment Income
+    # IIIB.  Spouse's Non-investment Income
+    # IV. Reimbursements
+    # V. Gifts
+    # VI. Liabilities
+
+    :param investment_pages:
+    :param section_info:
+    :param pdf_image_array:
+    :return:
+    """
+    locations = []
+    results = []
+    for pg in range(0, goto_page):
+        logging.info("Extracting content on page %s" % pg)
+        r = extract_from_page(pdf_image_array, pg, section_info)
+        locations = locations + r
+
+    logging.info("OCRing content from §§ I to VI")
+    for rect in locations:
+        x, y, w, h, page_num, section, row_index, row_order = rect
+        slice = pdf_image_array[page_num].crop(
+            (x, y - 60, (x + w), (y + h))
+        )  # 60 is a fluctuating number i think
+        text = ocr_slice(slice, 1)
+        a = [
+            "x",
+            "y",
+            "w",
+            "h",
+            "page_num",
+            "section",
+            "row_index",
+            "row_order",
+            "text",
+        ]
+        b = [
+            x,
+            y,
+            w,
+            h,
+            page_num,
+            section,
+            row_index,
+            row_order,
+            text.strip().replace("|", ""),
+        ]
+
+        cd = dict(zip(a, b))
+        results.append(cd)
+    return results
