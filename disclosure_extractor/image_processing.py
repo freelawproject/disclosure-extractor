@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 import pandas as pd
 
+from disclosure_extractor.data_processing import ocr_slice
+
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=grid_size)
@@ -18,18 +20,6 @@ def determine_section_of_contour(checkboxes, rect):
     search = [x for x in checkboxes if x[4] == rect[4]]
     for y in sorted(search, key=lambda x: (x[1]))[::-1]:
         if rect[1] > y[1]:
-            if y[5] == 1:
-                return 2
-            if y[5] == 2:
-                return 1
-            if y[5] == 3:
-                return 5
-            if y[5] == 5:
-                return 3
-            if y[5] == 6:
-                return 7
-            if y[5] == 7:
-                return 6
             return y[5]
     return max([x[5] for x in checkboxes])
 
@@ -44,7 +34,8 @@ def extract_contours_from_page(pages):
     checkboxes = []
     s1 = []
     s7 = []
-
+    results = {}
+    little_checkboxes = []
     for page_image in pages:
         cv_image = np.array(page_image)
         src = cv_image[:, :, ::-1].copy()
@@ -78,9 +69,9 @@ def extract_contours_from_page(pages):
         # Obtain the checkboxes on the page- to determine what section we are processing
         # do this first so we can remove any noise we might bump into on the top of the page
 
-        i = 0
+        i = len(contours) - 1
         checkboxes_on_page = []
-        while i < len(contours):
+        while i > 0:
             cntr = contours[i]
             area = cv2.contourArea(cntr)
             x, y, w, h = cv2.boundingRect(cntr)
@@ -93,12 +84,31 @@ def extract_contours_from_page(pages):
                     section = (
                         len(checkboxes) + 1 if len(checkboxes) + 1 < 9 else 8
                     )
-                    checkboxes.append((x, y, w, h, pg_num, section))
-                    # print(x,y, pg_num, "\t§", section)
-            i += 1
+                    mean = (
+                        sum(
+                            np.array(
+                                cv2.mean(cv_image[y : y + h, x : x + w])
+                            ).astype(np.uint8)
+                        )
+                        / 3
+                    )
+                    is_empty = False
+                    if mean < 230:
+                        is_empty = True
+                    checkboxes.append(
+                        (
+                            x,
+                            y,
+                            w,
+                            h,
+                            pg_num,
+                            section,
+                            {"is_section_empty": is_empty, "mean": mean},
+                        )
+                    )
+            i -= 1
 
         i = 0
-
         min_y = 0
         if checkboxes_on_page:
             min_y = min([x[1] for x in checkboxes_on_page])
@@ -133,23 +143,42 @@ def extract_contours_from_page(pages):
                 0.9 <= aspect_ratio <= 1.1
                 and extent > 0.8
                 and x > width * 0.2
-                and 50 > h > 30
+                and 50 > h > 20
+                and pg_num == 0
             ):
-                cv2.drawContours(cv_image, contours, i, (0, 0, 255))
-
-            # Checkboxes  -- this needs to be completed
-            if 0.9 <= aspect_ratio <= 1.1 and extent > 0.8 and x < width * 0.2:
                 if hierarchy[0, i, 3] == -1:
-                    cv2.drawContours(cv_image, contours, i, (0, 255, 0))
-                    mean = np.array(
-                        cv2.mean(cv_image[y : y + h, x : x + w])
-                    ).astype(np.uint8)
-                    # print(mean, (x, y), sum(mean) / 3)
-                    checked = ""
-                    if sum(mean) / 3 < 220:
-                        checked = "X"  # X means the NONE selection was checked and that the section has no content
-            i += 1
+                    # Process the little red checkbox at the start
+                    cv2.drawContours(cv_image, contours, i, (0, 0, 255))
+                    mean = (
+                        sum(
+                            np.array(
+                                cv2.mean(cv_image[y : y + h, x : x + w])
+                            ).astype(np.uint8)
+                        )
+                        / 3
+                    )
+                    little_checkboxes.append((x, y, w, h, mean))
+                    # font = cv2.FONT_HERSHEY_SIMPLEX
+                    # cv2.putText(cv_image, str(int(mean)), (x, y), font, 1,
+                    #             (0, 255, 0), 2, cv2.LINE_AA)
 
+            i += 1
+        # cv2.imwrite("tmp/sample%s.png" % pg_num, cv_image)
+
+        if pg_num == 0:
+            sorted_little_checkboxes = sorted(
+                little_checkboxes, key=lambda x: x[1]
+            )
+            nomination = sorted_little_checkboxes.pop(0)
+            amended = sorted_little_checkboxes.pop(-1)
+            initial, annual, final = sorted(
+                sorted_little_checkboxes, key=lambda x: (x[0])
+            )
+            results["nomination"] = True if nomination[4] < 220 else False
+            results["amended"] = True if amended[4] < 220 else False
+            results["initial"] = True if initial[4] < 220 else False
+            results["annual"] = True if annual[4] < 220 else False
+            results["final"] = True if final[4] < 220 else False
         pg_num += 1
 
     # Here is where we do some data processing and group rows together
@@ -202,8 +231,9 @@ def extract_contours_from_page(pages):
     investments_and_trusts = json.loads(ndf.to_json(orient="table"))
     all_other_sections = json.loads(ndf2.to_json(orient="table"))
 
-    # print (investments_and_trusts.keys())
-    return {
-        "investments_and_trusts": investments_and_trusts["data"],
-        "all_other_sections": all_other_sections["data"],
-    }
+    results["investments_and_trusts"] = investments_and_trusts["data"]
+    results["all_other_sections"] = all_other_sections["data"]
+    results["additional_info"] = {"page_number": len(pages)}
+    results["checkboxes"] = checkboxes
+    results["VIII"] = {"content": ocr_slice(pages[-2], 1)}
+    return results
