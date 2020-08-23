@@ -36,4 +36,8 @@ def process_financial_document(file=None, url=None, pdf_bytes=None):
     logging.info("Determining document structure")
     logging.info("Document is %s pages long" % page_total)
     document_structure = extract_contours_from_page(pages)
+
+    # this is unfinished - and currently doesnt return the text of the
+    # content just prints it off semi-nicely.  Need to generate it into
+    # a cl model structure and tweak the OCRing methods.  Need to perhaps sample a whitespace too.
     process_document(document_structure, pages)
