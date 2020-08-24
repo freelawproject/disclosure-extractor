@@ -118,7 +118,9 @@ def ocr_slice(rx, count):
     data = rx.getdata()
     counts = collections.Counter(data)
     if (
-        len(counts) < 100
+        len(counts)
+        < 50  # this number needs to fluctuate - or i need to find a way to create this in code,
+        #     Current ideas is to grab a predictable slice of page that is white and sample it and use that number as a threshold
     ):  # this may need to fluctuate to be accurate at dropping empty sections to remove gibberish
         return ""
     if count == 1 or count == 6 or count == 10 or count == 3:

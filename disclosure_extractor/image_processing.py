@@ -148,7 +148,7 @@ def extract_contours_from_page(pages):
             ):
                 if hierarchy[0, i, 3] == -1:
                     # Process the little red checkbox at the start
-                    cv2.drawContours(cv_image, contours, i, (0, 0, 255))
+                    # cv2.drawContours(cv_image, contours, i, (0, 0, 255))
                     mean = (
                         sum(
                             np.array(
