@@ -6,6 +6,7 @@ from __future__ import (
 )
 
 import logging
+from itertools import groupby
 
 import requests
 from pdf2image import convert_from_bytes
@@ -18,8 +19,34 @@ from disclosure_extractor.data_processing import process_document
 from disclosure_extractor.image_processing import extract_contours_from_page
 
 
-def process_financial_document(file=None, url=None, pdf_bytes=None):
-    logging.getLogger().setLevel(logging.INFO)
+def print_results(results):
+    """Sometimes its nice to just print out the results
+
+    """
+    for k,v in results.items():
+        if type(v) != dict:
+            continue
+        if "content" not in v.keys():
+            continue
+        groups = groupby(v['content'], lambda content: content['row_index'])
+        print ("\n",k,"\n====================")
+        for g in groups:
+            j = [x['text'] for x in list(g[1])]
+            k = j.copy()
+            k.pop(0)
+            if k != "Investments and Trusts":
+                if "".join(k).strip() != "":
+                    print("  |  ".join(j))
+            else:
+                print("  |  ".join(j))
+
+
+def process_financial_document(file=None, url=None, pdf_bytes=None, log_level=None):
+    """
+
+    """
+    if log_level:
+        logging.getLogger().setLevel(logging.INFO)
 
     logging.info("Beginning Extraction of Financial Document")
 
