@@ -1,5 +1,7 @@
 import collections
+import logging
 import re
+from itertools import groupby
 
 import pytesseract
 
@@ -53,7 +55,8 @@ investment_components = {
         "fields": [
             "A Description of Asset",
             "B Amount Code",
-            "B Value Code",
+            "B Type",
+            "C Value Code",
             "C Value Method",
             "C Type",
             "D Date",
@@ -71,6 +74,20 @@ def ocr_page(image):
     )
     text = text.replace("\n", " ").strip().replace("|", "")
     return re.sub(" +", " ", text)
+
+
+def ocr_date(image):
+    """OCR date string from image slice
+
+    """
+    text = pytesseract.image_to_string(
+        image,
+        config="-c tessedit_char_whitelist=01234567890./: preserve_interword_spaces=1x1 --psm %s --oem 3"
+        % 11,
+    )
+    text = text.replace("\n", " ").strip().replace("|", "")
+    text = re.sub(" +", " ", text)
+    return text
 
 
 def ocr_variables(slice, column):
@@ -118,7 +135,6 @@ def ocr_slice(rx, count):
     """
 
     """
-
     rx.convert("RGBA")
     data = rx.getdata()
     counts = collections.Counter(data)
@@ -131,86 +147,109 @@ def ocr_slice(rx, count):
     if count == 1 or count == 6 or count == 10 or count == 3:
         text = ocr_page(rx)
     elif count == 7:
-        text = pytesseract.image_to_string(
-            rx,
-            config="-c tessedit_char_whitelist=01234567890./: preserve_interword_spaces=1x1 --psm %s --oem 3"
-            % 11,
-        )
-        text = text.replace("\n", " ").strip().replace("|", "")
-        text = re.sub(" +", " ", text)
+        text = ocr_date(rx)
     elif count == 4 or count == 8 or count == 2 or count == 9 or count == 5:
         text = ocr_variables(rx, count)
     return text
 
 
-def process_document(document_structure, pages):
-    results = {}
-    g = None
+def generate_row_data(slice, row, column_index, row_index):
+    """
 
-    section_starts = set()
+    """
+    cd = {}
+    section = investment_components[row["section"]]["name"]
+    cd["section"] = section
+    cd["title"] = investment_components[row["section"]]["roman_numeral"]
+    cd["field"] = investment_components[row["section"]]["fields"][column_index]
+
+    cd["redactions"] = find_redactions(slice)
+    cd["column_index"] = column_index
+    cd["row_index"] = row_index
+    return cd
+
+
+def process_document(document_structure, pages):
+    results = {
+        "Positions": {"empty": None, "content": []},
+        "Agreements": {"empty": None, "content": []},
+        "Non-Investment Income": {"empty": None, "content": []},
+        "Spouse's Non-Investment Income": {"empty": None, "content": []},
+        "Reimbursements": {"empty": None, "content": []},
+        "Gifts": {"empty": None, "content": []},
+        "Liabilities": {"empty": None, "content": []},
+        "Investments and Trusts": {"empty": None, "content": []},
+    }
+
     checkboxes = [
         {x[5]: x[6]["is_section_empty"]}
         for x in document_structure["checkboxes"]
     ]
-    cd = {}
     for v in checkboxes:
         for i in v.keys():
-            cd[i] = v[i]
-    for row in sorted(
-        document_structure["all_other_sections"],
-        key=lambda x: (x["group"], x["x"]),
-    ):
-        if row["section"] not in section_starts:
-            print("")
-            section_starts.add(row["section"])
-            if cd[row["section"]]:
-                print(
-                    "\nSkipping empty §.%s--\n-------------------------"
-                    % investment_components[row["section"]]["name"]
-                )
-            else:
-                print(
-                    "\nProcessing §.%s--\n---------------------------"
-                    % investment_components[row["section"]]["name"]
-                )
+            category = investment_components[i]["name"]
+            results[category]["empty"] = v[i]
 
-        if cd[row["section"]]:
-            continue
-
-        if row["group"] != g:
-            print(
-                " "
-            )  # Need to group them together to return them as "objects"
-            g = row["group"]
-        slice = pages[row["page"]].crop(
-            (
-                row["x"],
-                row["y"] - 60,
-                (row["x"] + row["w"]),
-                (row["y"] + row["h"]),
-            )
-        )  # 60 is a fluctuating number i think
-        text = ocr_slice(slice, 1)
-        if find_redactions(slice):
-            print("■■■", end="")
-        print(text, end="  |  ")
-    column = 1
-
-    for row in sorted(
-        document_structure["investments_and_trusts"],
-        key=lambda x: (x["group"], x["x"]),
-    ):
-        if row["group"] != g:
-            print(" ")
-            g = row["group"]
-        slice = pages[row["page"]].crop(
-            (row["x"], row["y"], (row["x"] + row["w"]), (row["y"] + row["h"]))
+    parts = ["all_other_sections", "investments_and_trusts"]
+    for part in parts:
+        if part == "all_other_sections":
+            logging.info("Processing §§ I. to VI.")
+        else:
+            logging.info("Processing §VII.")
+        groups = groupby(
+            document_structure[part], lambda content: content["group"],
         )
-        text = ocr_slice(slice, column)
-        if find_redactions(slice):
-            print("■■■", end="")
-        print(text, end="  |  ")
+        adjustment = 0 if part == "investments_and_trusts" else 60
+        row_index = 0
+        for grouping in groups:
+            column_index = 0
+            for row in sorted(grouping[1], key=lambda x: x["x"]):
+                ocr_key = (
+                    1 if part == "all_other_sections" else column_index + 1
+                )
+                slice = pages[row["page"]].crop(
+                    (
+                        row["x"],
+                        row["y"] - adjustment,
+                        (row["x"] + row["w"]),
+                        (row["y"] + row["h"]),
+                    )
+                )
+                section = investment_components[row["section"]]["name"]
+                cd = generate_row_data(slice, row, column_index, row_index)
+                cd["text"] = ocr_slice(slice, ocr_key)
 
-        column += 1
-        if column == 11:
-            column = 1
+                content = results[section]["content"]
+                content.append(cd)
+                results[section]["content"] = content
+                column_index += 1
+            row_index += 1
+
+    width, height = pages[-2].size
+    slice = pages[-2].crop((0, height * 0.15, width, height * 0.95,))
+    results["Additional Information"] = {
+        "section": "Additional Information",
+        "title": "VIII",
+        "redactions": find_redactions(slice),
+        "text": ocr_slice(slice, 1),
+    }
+
+    i = 0
+    four = ["reporting_period", "date_of_report", "court", "judge"]
+    for one in document_structure["first_four"]:
+        if i > 0:
+            slice = pages[0].crop(
+                (
+                    one[0],
+                    one[1] * 1.2,
+                    one[0] + one[2],
+                    one[1] * 1.2 + one[3] * 0.7,
+                )
+            )
+        else:
+            slice = pages[0].crop(
+                (one[0], one[1], one[0] + one[2], one[1] + one[3])
+            )
+        results[four[i]] = ocr_slice(slice, 1).replace("\n", " ").strip()
+        i += 1
+    return results
