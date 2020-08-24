@@ -10,6 +10,7 @@ lxml==4.5.2
 numpy
 olefile==0.46
 opencv-python==4.4.0.42
+pandas
 pdf2image==1.13.1
 pdfminer.six==20181108
 Pillow==7.2.0
