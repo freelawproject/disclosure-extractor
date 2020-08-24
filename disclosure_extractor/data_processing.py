@@ -116,8 +116,11 @@ def ocr_variables(slice, column):
         ]
 
     for v in [6, 7, 10]:
+        width, height = slice.size
+        # Crop inside the cell for better results on the single code values
+        crop = slice.crop((width*.3, 0, width*.7, height*.65))
         text = pytesseract.image_to_string(
-            slice, config="--psm %s --oem 3" % v
+            crop, config="--psm %s --oem 3" % v
         )
         clean_text = text.replace("\n", "").strip().upper().strip(".")
         if clean_text == "PL" or clean_text == "PI" or clean_text == "P|":
@@ -126,17 +129,28 @@ def ocr_variables(slice, column):
             if clean_text in possibilities:
                 if len(clean_text) > 0:
                     return clean_text
-        if len(clean_text) == 2:
-            return clean_text[0]
-    return text.replace("\n", " ").strip()
+        # Do some hacking around what weve seen in results
+        if column == 4 or column == 8:
+            if clean_text == "I":
+                return "J"
+        if clean_text == "WW" and "W" in possibilities:
+            return "W"
+        if clean_text == "CC" and "C" in possibilities:
+            return "C"
+    # If we can't identify a known possibility return {} to indicate that
+    # we think a value exists but we did not scrape it successfully.
+    return "{}"
 
 
 def ocr_slice(rx, count):
     """
 
     """
+
     rx.convert("RGBA")
-    data = rx.getdata()
+    w, h = rx.size
+    crop = rx.crop((w*.1, h*.1, w*.8, h*.8))
+    data = crop.getdata()
     counts = collections.Counter(data)
     if (
         len(counts)
@@ -218,7 +232,6 @@ def process_document(document_structure, pages):
                 section = investment_components[row["section"]]["name"]
                 cd = generate_row_data(slice, row, column_index, row_index)
                 cd["text"] = ocr_slice(slice, ocr_key)
-
                 content = results[section]["content"]
                 content.append(cd)
                 results[section]["content"] = content
