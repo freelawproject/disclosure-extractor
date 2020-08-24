@@ -42,7 +42,7 @@ def print_results(results):
 
 
 def process_financial_document(
-    file=None, url=None, pdf_bytes=None, log_level=None
+    file_path=None, url=None, pdf_bytes=None, log_level=None
 ):
     """
 
@@ -52,15 +52,15 @@ def process_financial_document(
 
     logging.info("Beginning Extraction of Financial Document")
 
-    if not file and not url and not pdf_bytes:
+    if not file_path and not url and not pdf_bytes:
         logging.warning(
             "\n\n--> No file, url or pdf_bytes submitted<--\n--> Exiting early\n"
         )
         return
 
-    if file:
+    if file_path:
         logging.info("Opening PDF document from path")
-        pdf_bytes = open(file, "rb").read()
+        pdf_bytes = open(file_path, "rb").read()
     if url:
         logging.info("Downloading PDF from URL")
         pdf_bytes = requests.get(url, stream=True).content
