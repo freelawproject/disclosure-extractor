@@ -157,15 +157,23 @@ def process_document(document_structure, pages):
             print("")
             section_starts.add(row["section"])
             if cd[row["section"]]:
-                print("\nSkipping empty §.%s--\n-------------------------" % investment_components[row["section"]]['name'])
+                print(
+                    "\nSkipping empty §.%s--\n-------------------------"
+                    % investment_components[row["section"]]["name"]
+                )
             else:
-                print("\nProcessing §.%s--\n---------------------------" % investment_components[row["section"]]['name'])
+                print(
+                    "\nProcessing §.%s--\n---------------------------"
+                    % investment_components[row["section"]]["name"]
+                )
 
         if cd[row["section"]]:
             continue
 
         if row["group"] != g:
-            print(" ") # Need to group them together to return them as "objects"
+            print(
+                " "
+            )  # Need to group them together to return them as "objects"
             g = row["group"]
         slice = pages[row["page"]].crop(
             (
