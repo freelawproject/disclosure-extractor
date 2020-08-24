@@ -23,15 +23,15 @@ def print_results(results):
     """Sometimes its nice to just print out the results
 
     """
-    for k,v in results.items():
+    for k, v in results.items():
         if type(v) != dict:
             continue
         if "content" not in v.keys():
             continue
-        groups = groupby(v['content'], lambda content: content['row_index'])
-        print ("\n",k,"\n====================")
+        groups = groupby(v["content"], lambda content: content["row_index"])
+        print("\n", k, "\n====================")
         for g in groups:
-            j = [x['text'] for x in list(g[1])]
+            j = [x["text"] for x in list(g[1])]
             k = j.copy()
             k.pop(0)
             if k != "Investments and Trusts":
@@ -41,7 +41,9 @@ def print_results(results):
                 print("  |  ".join(j))
 
 
-def process_financial_document(file=None, url=None, pdf_bytes=None, log_level=None):
+def process_financial_document(
+    file=None, url=None, pdf_bytes=None, log_level=None
+):
     """
 
     """

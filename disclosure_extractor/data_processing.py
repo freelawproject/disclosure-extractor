@@ -118,10 +118,8 @@ def ocr_variables(slice, column):
     for v in [6, 7, 10]:
         width, height = slice.size
         # Crop inside the cell for better results on the single code values
-        crop = slice.crop((width*.3, 0, width*.7, height*.65))
-        text = pytesseract.image_to_string(
-            crop, config="--psm %s --oem 3" % v
-        )
+        crop = slice.crop((width * 0.3, 0, width * 0.7, height * 0.65))
+        text = pytesseract.image_to_string(crop, config="--psm %s --oem 3" % v)
         clean_text = text.replace("\n", "").strip().upper().strip(".")
         if clean_text == "PL" or clean_text == "PI" or clean_text == "P|":
             return "P1"
@@ -149,7 +147,7 @@ def ocr_slice(rx, count):
 
     rx.convert("RGBA")
     w, h = rx.size
-    crop = rx.crop((w*.1, h*.1, w*.8, h*.8))
+    crop = rx.crop((w * 0.1, h * 0.1, w * 0.8, h * 0.8))
     data = crop.getdata()
     counts = collections.Counter(data)
     if (
