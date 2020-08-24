@@ -4,8 +4,6 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from disclosure_extractor.data_processing import ocr_slice
-
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=grid_size)
@@ -235,5 +233,45 @@ def extract_contours_from_page(pages):
     results["all_other_sections"] = all_other_sections["data"]
     results["additional_info"] = {"page_number": len(pages)}
     results["checkboxes"] = checkboxes
-    results["VIII"] = {"content": ocr_slice(pages[-2], 1)}
+    # results["VIII"] = {"content": ocr_slice(pages[-2], 1)}
     return results
+
+
+def find_redactions(slice):
+    cv_image = np.array(slice)
+    src = cv_image[:, :, ::-1].copy()
+
+    # HSV thresholding to get rid of as much background as possible
+    hsv = cv2.cvtColor(src.copy(), cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(
+        src=hsv, lowerb=np.array([0, 0, 0]), upperb=np.array([255, 255, 255]),
+    )
+    result = cv2.bitwise_and(src, src, mask=mask)
+    _, gg, _ = cv2.split(result)
+    gg = clahe(gg, 1, (3, 3))
+
+    # Adaptive Thresholding to isolate the bed
+    image = cv2.adaptiveThreshold(
+        src=cv2.blur(gg, (1, 1)),
+        maxValue=255,
+        adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        thresholdType=cv2.THRESH_BINARY,
+        blockSize=41,  # maybe variable...
+        C=2,
+    )
+    mode = cv2.RETR_CCOMP
+    method = cv2.CHAIN_APPROX_SIMPLE
+
+    contours, hierarchy = cv2.findContours(image, mode, method)
+    i = 0
+    while i < len(contours):
+        cntr = contours[i]
+        area = cv2.contourArea(cntr)
+        x, y, w, h = cv2.boundingRect(cntr)
+        rect_area = w * h
+        extent = float(area) / rect_area
+        aspect_ratio = float(w) / h
+        if 0.9 <= aspect_ratio <= 10.1 and extent > 0.8 and 50 > h > 20:
+            return True
+        i += 1
+    return False

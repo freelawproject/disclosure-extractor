@@ -3,6 +3,8 @@ import re
 
 import pytesseract
 
+from disclosure_extractor.image_processing import find_redactions
+
 investment_components = {
     1: {
         "roman_numeral": "I",
@@ -113,6 +115,9 @@ def ocr_variables(slice, column):
 
 
 def ocr_slice(rx, count):
+    """
+
+    """
 
     rx.convert("RGBA")
     data = rx.getdata()
@@ -186,6 +191,8 @@ def process_document(document_structure, pages):
             )
         )  # 60 is a fluctuating number i think
         text = ocr_slice(slice, 1)
+        if find_redactions(slice):
+            print("■■■", end="")
         print(text, end="  |  ")
     column = 1
 
@@ -200,6 +207,8 @@ def process_document(document_structure, pages):
             (row["x"], row["y"], (row["x"] + row["w"]), (row["y"] + row["h"]))
         )
         text = ocr_slice(slice, column)
+        if find_redactions(slice):
+            print("■■■", end="")
         print(text, end="  |  ")
 
         column += 1
