@@ -30,37 +30,17 @@ def extract_contours_from_page(pages):
     """
     pg_num = 0
     checkboxes = []
+    s0 = []
     s1 = []
     s7 = []
     results = {}
     little_checkboxes = []
     for page_image in pages:
-        cv_image = np.array(page_image)
-        src = cv_image[:, :, ::-1].copy()
 
-        # HSV thresholding to get rid of as much background as possible
-        hsv = cv2.cvtColor(src.copy(), cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(
-            src=hsv,
-            lowerb=np.array([0, 0, 0]),
-            upperb=np.array([255, 255, 255]),
-        )
-        result = cv2.bitwise_and(src, src, mask=mask)
-        _, g, _ = cv2.split(result)
-        g = clahe(g, 1, (3, 3))
-
-        # Adaptive Thresholding to isolate the bed
-        image = cv2.adaptiveThreshold(
-            src=cv2.blur(g, (1, 1)),
-            maxValue=255,
-            adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            thresholdType=cv2.THRESH_BINARY,
-            blockSize=41,  # maybe variable...
-            C=2,
-        )
         mode = cv2.RETR_CCOMP
         method = cv2.CHAIN_APPROX_SIMPLE
-
+        cv_image = np.array(page_image)
+        image = process_image(page_image)
         height, width = image.shape
         contours, hierarchy = cv2.findContours(image, mode, method)
 
@@ -119,13 +99,21 @@ def extract_contours_from_page(pages):
             extent = float(area) / rect_area
             aspect_ratio = float(w) / h
 
+            # Date and name information
+            if (
+                y < height * 0.5 and h > 50 and x > width * 0.5 and pg_num == 0
+            ) or (height * 0.05 < y < height * 0.1 and h > 50 and pg_num == 0):
+                if hierarchy[0, i, 3] == -1:
+                    # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
+                    s0.append((x, y, w, h))
+
             # Cells for Investments and Trusts  √√√√√
             upper = 180 if height > 3000 else 80
             if 10 > w / h > 0.9 and upper > h > 40 and len(checkboxes) > 7:
                 # This lets me remove overlapping boxes,
                 # and take the inner, cleaner version
                 if hierarchy[0, i, 3] == -1:
-                    cv2.drawContours(cv_image, contours, i, (70, 70, 255))
+                    # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
                     s7.append((x, y, w, h, pg_num, range(y, y + h), 8))
 
             # Highlight text input lines  √√√√√√
@@ -231,14 +219,18 @@ def extract_contours_from_page(pages):
 
     results["investments_and_trusts"] = investments_and_trusts["data"]
     results["all_other_sections"] = all_other_sections["data"]
+    results["first_four"] = s0
     results["additional_info"] = {"page_number": len(pages)}
     results["checkboxes"] = checkboxes
     # results["VIII"] = {"content": ocr_slice(pages[-2], 1)}
     return results
 
 
-def find_redactions(slice):
-    cv_image = np.array(slice)
+def process_image(input_image):
+    """
+
+    """
+    cv_image = np.array(input_image)
     src = cv_image[:, :, ::-1].copy()
 
     # HSV thresholding to get rid of as much background as possible
@@ -259,10 +251,15 @@ def find_redactions(slice):
         blockSize=41,  # maybe variable...
         C=2,
     )
+    return image
+
+
+def find_redactions(slice):
     mode = cv2.RETR_CCOMP
     method = cv2.CHAIN_APPROX_SIMPLE
-
+    image = process_image(slice)
     contours, hierarchy = cv2.findContours(image, mode, method)
+
     i = 0
     while i < len(contours):
         cntr = contours[i]
