@@ -29,16 +29,19 @@ def print_results(results):
         if "content" not in v.keys():
             continue
         groups = groupby(v["content"], lambda content: content["row_index"])
-        print("\n", k, "\n====================")
-        for g in groups:
-            j = [x["text"] for x in list(g[1])]
-            k = j.copy()
-            k.pop(0)
-            if k != "Investments and Trusts":
-                if "".join(k).strip() != "":
-                    print("  |  ".join(j))
-            else:
-                print("  |  ".join(j))
+        print("")
+        print(k, "\n====================")
+        whitespace = [
+            max(i)
+            for i in map(
+                list,
+                zip(*[[len(x["text"]) for x in list(x[1])] for x in groups]),
+            )
+        ]
+        g2 = groupby(v["content"], lambda content: content["row_index"])
+        for g in g2:
+            j = [x[0]["text"].ljust(x[1]) for x in zip(list(g[1]), whitespace)]
+            print(" | ".join(j))
 
 
 def process_financial_document(
