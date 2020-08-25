@@ -40,7 +40,12 @@ def print_results(results):
         ]
         g2 = groupby(v["content"], lambda content: content["row_index"])
         for g in g2:
-            j = [x[0]["text"].ljust(x[1]) for x in zip(list(g[1]), whitespace)]
+            j = [
+                x[0]["text"].ljust(x[1] + 3)
+                if x[0]["redactions"] == False
+                else (x[0]["text"] + " ■■").ljust(x[1] + 3)
+                for x in zip(list(g[1]), whitespace)
+            ]
             print(" | ".join(j))
 
 
