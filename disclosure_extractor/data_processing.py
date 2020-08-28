@@ -192,6 +192,7 @@ def generate_row_data(slice, row, column_index, row_index):
 def process_document(document_structure, pages):
     results = {}
     document_sections = section_template["sections"]
+    section_names = list(document_sections.keys())
 
     checkboxes = [
         {x[5]: x[6]["is_section_empty"]}
