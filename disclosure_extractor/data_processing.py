@@ -202,8 +202,8 @@ def process_document(document_structure, pages):
     category_list = list(document_sections.keys())
     for v in checkboxes:
         for i in v.keys():
-            results[category]["empty"] = v[i]
             category = category_list[i - 1]
+            document_sections[category]["empty"] = v[i]
 
     parts = ["all_other_sections", "investments_and_trusts"]
     for part in parts:
