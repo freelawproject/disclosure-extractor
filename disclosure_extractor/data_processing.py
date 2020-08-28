@@ -272,4 +272,15 @@ def process_document(document_structure, pages):
             )
         results[four[i]] = ocr_slice(slice, 1).replace("\n", " ").strip()
         i += 1
+
+    for sec in document_sections:
+        if "rows" in document_sections[sec]:
+            idx = list(document_sections[sec]["rows"].keys())
+            reset_idx = list(
+                map(lambda x: x - min(idx), idx)
+            )  # re-number row indices
+            document_sections[sec]["rows"] = dict(
+                zip(reset_idx, list(document_sections[sec]["rows"].values()))
+            )
+
     return results
