@@ -233,9 +233,7 @@ def process_document(document_structure, pages):
                 section = section_names[row["section"] - 1]
                 cd = generate_row_data(slice, row, column_index, row_index)
                 cd["text"] = ocr_slice(slice, ocr_key)
-                content = results[section]["content"]
-                content.append(cd)
-                results[section]["content"] = content
+
                 column_index += 1
             row_index += 1
 
