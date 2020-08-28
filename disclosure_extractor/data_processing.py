@@ -199,6 +199,7 @@ def process_document(document_structure, pages):
         {x[5]: x[6]["is_section_empty"]}
         for x in document_structure["checkboxes"]
     ]
+    category_list = list(document_sections.keys())
     for v in checkboxes:
         for i in v.keys():
             category = investment_components[i]["name"]
