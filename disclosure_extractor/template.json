@@ -1,0 +1,67 @@
+{
+	"title": null,
+	"url": null,
+	"type": null,
+	"sections": {
+		"Positions": {
+      "empty": null,
+      "columns": [
+        "Position",
+        "Name of Organization/Entity"
+      ],
+      "rows": {}
+    },
+		"Agreements": {
+			"empty": true,
+			"columns": ["Date", "Parties and Terms"],
+			"rows": {}
+      },
+		"Non-Investment Income": {
+			"empty": true,
+			"columns": ["Date", "Source and Type", "Income"],
+			"rows": {}
+		},
+		"Spouse's Non-Investment Income": {
+			"empty": true,
+			"columns": ["Date", "Source and Type"],
+			"rows": {}
+		},
+		"Reimbursements": {
+			"empty": true,
+			"columns": ["Source", "Dates", "Locations", "Purpose", "Items Paid or Provided"],
+			"rows": {}
+		},
+		"Gifts": {
+			"empty": true,
+			"columns": ["Source", "Description", "Value"],
+			"rows": {}
+		},
+		"Liabilities": {
+			"empty": true,
+			"columns": ["Creditor", "Description", "Value Code"],
+			"rows": {}
+		},
+		"Investments and Trusts": {
+			"empty": true,
+			"help": {
+				"A": "Description of Assets",
+				"B1": "Amount Code (A-H)",
+				"B2": "Type",
+				"C1": "Value Code 2",
+				"C2": "Value Method Code 3",
+				"D1": "Type",
+				"D2": "Date Month/Day",
+				"D3": "Value Code 2",
+				"D4": "Gain Code 1",
+				"D5": "Identity of Buyer/Seller (if private)"
+			},
+			"columns": ["A", "B1", "B2", "C1", "C2", "D1", "D2", "D3", "D4", "D5"],
+			"rows": {}
+		}
+  },
+  "Additional Information or Explanations": {
+		"text": null
+	  },
+	"pdf_size": null,
+	"date_created": null
+}
