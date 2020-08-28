@@ -239,6 +239,11 @@ def process_document(document_structure, pages):
                     cd["field"]: cd["text"],
                     "is_redacted": cd["redactions"],
                 }
+                if document_sections[section]["empty"] is False:
+                    if ridx in document_sections[section]["rows"]:
+                        document_sections[section]["rows"][ridx].append(cell)
+                    else:
+                        document_sections[section]["rows"][ridx] = [cell]
                 column_index += 1
             row_index += 1
 
