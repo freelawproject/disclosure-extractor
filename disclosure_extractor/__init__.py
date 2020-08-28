@@ -104,4 +104,5 @@ def process_financial_document(
     )
     results["url"] = url
     results["file_path"] = file_path
+    results["pdf_size"] = len(pdf_bytes)
     return results
