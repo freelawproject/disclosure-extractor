@@ -20,6 +20,7 @@ from disclosure_extractor.image_processing import extract_contours_from_page
 
 ESTIMATE_NET_WORTH = False
 
+
 def print_results(results):
     """Sometimes its nice to just print out the results
 
