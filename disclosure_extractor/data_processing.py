@@ -190,16 +190,7 @@ def generate_row_data(slice, row, column_index, row_index):
 
 
 def process_document(document_structure, pages):
-    results = {
-        "Positions": {"empty": None, "content": []},
-        "Agreements": {"empty": None, "content": []},
-        "Non-Investment Income": {"empty": None, "content": []},
-        "Spouse's Non-Investment Income": {"empty": None, "content": []},
-        "Reimbursements": {"empty": None, "content": []},
-        "Gifts": {"empty": None, "content": []},
-        "Liabilities": {"empty": None, "content": []},
-        "Investments and Trusts": {"empty": None, "content": []},
-    }
+    results = {}
 
     checkboxes = [
         {x[5]: x[6]["is_section_empty"]}
