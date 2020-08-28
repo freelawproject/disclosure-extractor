@@ -7,65 +7,6 @@ import pytesseract
 
 from disclosure_extractor.image_processing import find_redactions
 
-investment_components = {
-    1: {
-        "roman_numeral": "I",
-        "name": "Positions",
-        "fields": ["Position", "Name of Organization/Entity"],
-    },
-    2: {
-        "roman_numeral": "II",
-        "name": "Agreements",
-        "fields": ["Date", "Parties and Terms"],
-    },
-    3: {
-        "roman_numeral": "IIIA",
-        "name": "Non-Investment Income",
-        "fields": ["Date", "Source and Type", "Income"],
-    },
-    4: {
-        "roman_numeral": "IIIB",
-        "name": "Spouse's Non-Investment Income",
-        "fields": ["Date", "Source and Type"],
-    },
-    5: {
-        "roman_numeral": "IV",
-        "name": "Reimbursements",
-        "fields": [
-            "Sources",
-            "Dates",
-            "Location",
-            "Purpose",
-            "Items Paid or Provided",
-        ],
-    },
-    6: {
-        "roman_numeral": "V",
-        "name": "Gifts",
-        "fields": ["Source", "Description", "Value"],
-    },
-    7: {
-        "roman_numeral": "VI",
-        "name": "Liabilities",
-        "fields": ["Creditor", "Description", "Value Code"],
-    },
-    8: {
-        "roman_numeral": "VII",
-        "name": "Investments and Trusts",
-        "fields": [
-            "A Description of Asset",
-            "B Amount Code",
-            "B Type",
-            "C Value Code",
-            "C Value Method",
-            "C Type",
-            "D Date",
-            "D Value Code",
-            "D Gain Code",
-            "D Identity of Buyer/Seller",
-        ],
-    },
-}
 import json
 from collections import OrderedDict
 import os
