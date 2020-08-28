@@ -234,6 +234,7 @@ def process_document(document_structure, pages):
                 cd = generate_row_data(slice, row, column_index, row_index)
                 cd["text"] = ocr_slice(slice, ocr_key)
 
+                ridx = cd["row_index"]
                 cell = {
                     cd["field"]: cd["text"],
                     "is_redacted": cd["redactions"],
