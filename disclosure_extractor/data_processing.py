@@ -66,6 +66,9 @@ investment_components = {
         ],
     },
 }
+import json
+from collections import OrderedDict
+import os
 
 
 def ocr_page(image):
