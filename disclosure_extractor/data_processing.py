@@ -181,8 +181,9 @@ def generate_row_data(slice, row, column_index, row_index):
     section_names = list(section_template["sections"].keys())
     section = section_names[row["section"] - 1]
     cd["section"] = section
-    cd["field"] = investment_components[row["section"]]["fields"][column_index]
-
+    cd["field"] = section_template["sections"][section]["columns"][
+        column_index
+    ]
     cd["redactions"] = find_redactions(slice)
     cd["column_index"] = column_index
     cd["row_index"] = row_index
