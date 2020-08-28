@@ -283,4 +283,5 @@ def process_document(document_structure, pages):
                 zip(reset_idx, list(document_sections[sec]["rows"].values()))
             )
 
+    results["sections"] = document_sections
     return results
