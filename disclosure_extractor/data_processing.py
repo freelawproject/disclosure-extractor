@@ -242,8 +242,6 @@ def process_document(document_structure, pages):
     width, height = pages[-2].size
     slice = pages[-2].crop((0, height * 0.15, width, height * 0.95,))
     results["Additional Information"] = {
-        "section": "Additional Information",
-        "title": "VIII",
         "redactions": find_redactions(slice),
         "text": ocr_slice(slice, 1),
     }
