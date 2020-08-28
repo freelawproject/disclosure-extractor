@@ -230,7 +230,7 @@ def process_document(document_structure, pages):
                         (row["y"] + row["h"]),
                     )
                 )
-                section = investment_components[row["section"]]["name"]
+                section = section_names[row["section"] - 1]
                 cd = generate_row_data(slice, row, column_index, row_index)
                 cd["text"] = ocr_slice(slice, ocr_key)
                 content = results[section]["content"]
