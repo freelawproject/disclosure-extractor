@@ -85,25 +85,27 @@ def process_financial_document(
     logging.info("Extracting content from financial disclosure")
     results = process_document(document_structure, pages)
     results["page_count"] = page_total
-    logging.info("Estimating net worth...")
-
-    results["investment_range"] = estimate_investment_net_worth(results)
-    results["income_gains"] = income_gains(results)
-    logging.info(
-        "Judicial investments appear to be roughly %s to %s with a gain between %s and %s or about %s percent.",
-        results["investment_range"][0],
-        results["investment_range"][1],
-        results["income_gains"][0],
-        results["income_gains"][1],
-        "{:.2f}".format(
-            100
-            * (
-                float(results["income_gains"][1])
-                / results["investment_range"][1]
-            )
-        ),
-    )
     results["url"] = url
     results["file_path"] = file_path
     results["pdf_size"] = len(pdf_bytes)
+
+    if ESTIMATE_NET_WORTH:
+        logging.info("Estimating net worth...")
+
+        results["investment_range"] = estimate_investment_net_worth(results)
+        results["income_gains"] = income_gains(results)
+        logging.info(
+            "Judicial investments appear to be roughly %s to %s with a gain between %s and %s or about %s percent.",
+            results["investment_range"][0],
+            results["investment_range"][1],
+            results["income_gains"][0],
+            results["income_gains"][1],
+            "{:.2f}".format(
+                100
+                * (
+                    float(results["income_gains"][1])
+                    / results["investment_range"][1]
+                )
+            ),
+        )
     return results
