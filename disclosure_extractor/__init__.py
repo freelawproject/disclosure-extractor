@@ -102,4 +102,5 @@ def process_financial_document(
             )
         ),
     )
+    results["url"] = url
     return results
