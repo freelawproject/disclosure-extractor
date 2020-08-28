@@ -70,6 +70,11 @@ import json
 from collections import OrderedDict
 import os
 
+scriptdir = os.path.basename(os.path.dirname(os.path.realpath(__file__)))
+
+with open(os.path.join(scriptdir, "template.json")) as f:
+    section_template = json.load(f, object_pairs_hook=OrderedDict)
+
 
 def ocr_page(image):
     text = pytesseract.image_to_string(
