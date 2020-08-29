@@ -1,8 +1,69 @@
 import json
+from itertools import groupby
 
 import cv2
 import numpy as np
 import pandas as pd
+
+section_dict = {
+    1: {
+        "roman_numeral": "I",
+        "name": "Positions",
+        "fields": ["Position", "Name of Organization/Entity"],
+    },
+    2: {
+        "roman_numeral": "II",
+        "name": "Agreements",
+        "fields": ["Date", "Parties and Terms"],
+    },
+    3: {
+        "roman_numeral": "IIIA",
+        "name": "Non-Investment Income",
+        "fields": ["Date", "Source and Type", "Income"],
+    },
+    4: {
+        "roman_numeral": "IIIB",
+        "name": "Non Investment Income Spouse",
+        "fields": ["Date", "Source and Type"],
+    },
+    5: {
+        "roman_numeral": "IV",
+        "name": "Reimbursements",
+        "fields": [
+            "Sources",
+            "Dates",
+            "Location",
+            "Purpose",
+            "Items Paid or Provided",
+        ],
+    },
+    6: {
+        "roman_numeral": "V",
+        "name": "Gifts",
+        "fields": ["Source", "Description", "Value"],
+    },
+    7: {
+        "roman_numeral": "VI",
+        "name": "Liabilities",
+        "fields": ["Creditor", "Description", "Value Code"],
+    },
+    8: {
+        "roman_numeral": "VII",
+        "name": "Investments and Trusts",
+        "fields": [
+            "A Description of Asset",
+            "B Amount Code",
+            "B Type",
+            "C Value Code",
+            "C Value Method",
+            "C Type",
+            "D Date",
+            "D Value Code",
+            "D Gain Code",
+            "D Identity of Buyer/Seller",
+        ],
+    },
+}
 
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
@@ -22,18 +83,31 @@ def determine_section_of_contour(checkboxes, rect):
     return max([x[5] for x in checkboxes])
 
 
+def load_template():
+    with open("disclosure_extractor/extractor_template.json", "r") as f:
+        results = json.load(f)
+    return results
+
+def erode(image):
+    kernel = np.ones((10, 10), np.uint8)
+    return cv2.erode(image, kernel, iterations=1)
+
+
+
 def extract_contours_from_page(pages):
     """Process PDF
 
     Return the document structure as JSON data to easily and accurately
     extract out the information.
     """
+    results = load_template()
+
     pg_num = 0
     checkboxes = []
+    check = {}
     s0 = []
     s1 = []
     s7 = []
-    results = {}
     little_checkboxes = []
     for page_image in pages:
 
@@ -73,6 +147,7 @@ def extract_contours_from_page(pages):
                     is_empty = False
                     if mean < 230:
                         is_empty = True
+                    section = section_dict[section]["name"]
                     checkboxes.append(
                         (
                             x,
@@ -84,8 +159,9 @@ def extract_contours_from_page(pages):
                             {"is_section_empty": is_empty, "mean": mean},
                         )
                     )
+                    check[section] = is_empty
             i -= 1
-
+        # print(checkboxes)
         i = 0
         min_y = 0
         if checkboxes_on_page:
@@ -104,7 +180,7 @@ def extract_contours_from_page(pages):
                 y < height * 0.5 and h > 50 and x > width * 0.5 and pg_num == 0
             ) or (height * 0.05 < y < height * 0.1 and h > 50 and pg_num == 0):
                 if hierarchy[0, i, 3] == -1:
-                    # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
+                    # cv2.drawContours(cv_image, contours, i, (255, 70, 70))
                     s0.append((x, y, w, h))
 
             # Cells for Investments and Trusts  √√√√√
@@ -121,9 +197,10 @@ def extract_contours_from_page(pages):
                 # if hierarchy[0, i, 3] == -1:
                 rect = (x, y, w, h, pg_num, range(y, y + h))
                 section = determine_section_of_contour(checkboxes, rect)
+                # section = section_dict[section]['name']
                 rect = (x, y, w, h, pg_num, range(y, y + h), section)
                 s1.append(rect)
-
+                # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
             # Find small checkboxes on first page  ** this need to be completed
             if (
                 0.9 <= aspect_ratio <= 1.1
@@ -149,9 +226,8 @@ def extract_contours_from_page(pages):
                     #             (0, 255, 0), 2, cv2.LINE_AA)
 
             i += 1
-        # cv2.imwrite("tmp/sample%s.png" % pg_num, cv_image)
 
-        if pg_num == 0:
+        if pg_num == 0 and len(little_checkboxes) == 5:
             sorted_little_checkboxes = sorted(
                 little_checkboxes, key=lambda x: x[1]
             )
@@ -211,18 +287,67 @@ def extract_contours_from_page(pages):
         < 0
     ).cumsum()
 
-    df2 = df2[df2.section != 8]
+    df2 = df2[df2.section != "Investments and Trusts"]
     ndf2 = df2.groupby("group").filter(lambda x: len(x) > 1)
 
-    investments_and_trusts = json.loads(ndf.to_json(orient="table"))
-    all_other_sections = json.loads(ndf2.to_json(orient="table"))
+    investments = json.loads(ndf.to_json(orient="table"))
+    other_sections = json.loads(ndf2.to_json(orient="table"))
 
-    results["investments_and_trusts"] = investments_and_trusts["data"]
-    results["all_other_sections"] = all_other_sections["data"]
+    other_groups = groupby(
+        other_sections["data"], lambda content: content["group"],
+    )
+
+    investment_group = groupby(
+        investments["data"], lambda content: content["group"],
+    )
+
+    row_index = 0
+    for grouping in investment_group:
+        col_indx = 0
+        groups = list(grouping[1])
+        sect = groups[0]["section"]
+        # print(sect)
+        results["sections"]["Investments and Trusts"]["rows"][row_index] = {}
+        for group in sorted(groups, key=lambda x: x["x"]):
+            group["coords"] = (
+                group["x"],
+                group["y"],
+                (group["x"] + group["w"]),
+                (group["y"] + group["h"]),
+            )
+            column = results["sections"]["Investments and Trusts"]["columns"][col_indx]
+            results["sections"]["Investments and Trusts"]["rows"][row_index][column] = group
+            results["sections"]["Investments and Trusts"]["empty"] = check["Investments and Trusts"]
+            col_indx += 1
+        row_index += 1
+
+    row_index = 0
+    for grouping in other_groups:
+        col_indx = 0
+        groups = list(grouping[1])
+        sect = groups[0]["section"]
+        if results["sections"][sect]["rows"] == {}:
+            row_index = 0
+        results["sections"][sect]["rows"][row_index] = {}
+        for group in sorted(groups, key=lambda x: x["x"]):
+            group["coords"] = (
+                group["x"],
+                group["y"] - 60,
+                (group["x"] + group["w"]),
+                (group["y"] + group["h"]),
+            )
+            # print(results["sections"][sect]["columns"], col_indx)
+            try:
+                column = results["sections"][sect]["columns"][col_indx]
+                results["sections"][sect]["rows"][row_index][column] = group
+                results["sections"][sect]["empty"] = check[sect]
+                col_indx += 1
+            except:
+                pass
+        row_index += 1
+
     results["first_four"] = s0
-    results["additional_info"] = {"page_number": len(pages)}
-    results["checkboxes"] = checkboxes
-    # results["VIII"] = {"content": ocr_slice(pages[-2], 1)}
+    results["page_count"] = len(pages)
     return results
 
 

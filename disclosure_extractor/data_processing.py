@@ -1,71 +1,10 @@
 import collections
 import logging
 import re
-from itertools import groupby
 
 import pytesseract
 
 from disclosure_extractor.image_processing import find_redactions
-
-investment_components = {
-    1: {
-        "roman_numeral": "I",
-        "name": "Positions",
-        "fields": ["Position", "Name of Organization/Entity"],
-    },
-    2: {
-        "roman_numeral": "II",
-        "name": "Agreements",
-        "fields": ["Date", "Parties and Terms"],
-    },
-    3: {
-        "roman_numeral": "IIIA",
-        "name": "Non-Investment Income",
-        "fields": ["Date", "Source and Type", "Income"],
-    },
-    4: {
-        "roman_numeral": "IIIB",
-        "name": "Spouse's Non-Investment Income",
-        "fields": ["Date", "Source and Type"],
-    },
-    5: {
-        "roman_numeral": "IV",
-        "name": "Reimbursements",
-        "fields": [
-            "Sources",
-            "Dates",
-            "Location",
-            "Purpose",
-            "Items Paid or Provided",
-        ],
-    },
-    6: {
-        "roman_numeral": "V",
-        "name": "Gifts",
-        "fields": ["Source", "Description", "Value"],
-    },
-    7: {
-        "roman_numeral": "VI",
-        "name": "Liabilities",
-        "fields": ["Creditor", "Description", "Value Code"],
-    },
-    8: {
-        "roman_numeral": "VII",
-        "name": "Investments and Trusts",
-        "fields": [
-            "A Description of Asset",
-            "B Amount Code",
-            "B Type",
-            "C Value Code",
-            "C Value Method",
-            "C Type",
-            "D Date",
-            "D Value Code",
-            "D Gain Code",
-            "D Identity of Buyer/Seller",
-        ],
-    },
-}
 
 
 def ocr_page(image):
@@ -162,94 +101,17 @@ def ocr_slice(rx, count):
         text = ocr_date(rx)
     elif count == 4 or count == 8 or count == 2 or count == 9 or count == 5:
         text = ocr_variables(rx, count)
+    if text == "i":
+        print(count)
     return text
 
 
-def generate_row_data(slice, row, column_index, row_index):
-    """
-
-    """
-    cd = {}
-    section = investment_components[row["section"]]["name"]
-    cd["section"] = section
-    cd["title"] = investment_components[row["section"]]["roman_numeral"]
-    cd["field"] = investment_components[row["section"]]["fields"][column_index]
-
-    cd["redactions"] = find_redactions(slice)
-    cd["column_index"] = column_index
-    cd["row_index"] = row_index
-    return cd
-
-
-def process_document(document_structure, pages):
-    results = {
-        "Positions": {"empty": None, "content": []},
-        "Agreements": {"empty": None, "content": []},
-        "Non-Investment Income": {"empty": None, "content": []},
-        "Spouse's Non-Investment Income": {"empty": None, "content": []},
-        "Reimbursements": {"empty": None, "content": []},
-        "Gifts": {"empty": None, "content": []},
-        "Liabilities": {"empty": None, "content": []},
-        "Investments and Trusts": {"empty": None, "content": []},
-    }
-
-    checkboxes = [
-        {x[5]: x[6]["is_section_empty"]}
-        for x in document_structure["checkboxes"]
-    ]
-    for v in checkboxes:
-        for i in v.keys():
-            category = investment_components[i]["name"]
-            results[category]["empty"] = v[i]
-
-    parts = ["all_other_sections", "investments_and_trusts"]
-    for part in parts:
-        if part == "all_other_sections":
-            logging.info("Processing §§ I. to VI.")
-        else:
-            logging.info("Processing §VII.")
-        groups = groupby(
-            document_structure[part], lambda content: content["group"],
-        )
-        adjustment = 0 if part == "investments_and_trusts" else 60
-        row_index = 0
-        for grouping in groups:
-            column_index = 0
-            for row in sorted(grouping[1], key=lambda x: x["x"]):
-                ocr_key = (
-                    1 if part == "all_other_sections" else column_index + 1
-                )
-                slice = pages[row["page"]].crop(
-                    (
-                        row["x"],
-                        row["y"] - adjustment,
-                        (row["x"] + row["w"]),
-                        (row["y"] + row["h"]),
-                    )
-                )
-                section = investment_components[row["section"]]["name"]
-                cd = generate_row_data(slice, row, column_index, row_index)
-                cd["text"] = ocr_slice(slice, ocr_key)
-                content = results[section]["content"]
-                content.append(cd)
-                results[section]["content"] = content
-                column_index += 1
-            row_index += 1
-
-    width, height = pages[-2].size
-    slice = pages[-2].crop((0, height * 0.15, width, height * 0.95,))
-    results["Additional Information"] = {
-        "section": "Additional Information",
-        "title": "VIII",
-        "redactions": find_redactions(slice),
-        "text": ocr_slice(slice, 1),
-    }
-
+def add_first_four(results, page):
     i = 0
     four = ["reporting_period", "date_of_report", "court", "judge"]
-    for one in document_structure["first_four"]:
+    for one in results["first_four"]:
         if i > 0:
-            slice = pages[0].crop(
+            slice = page.crop(
                 (
                     one[0],
                     one[1] * 1.2,
@@ -258,9 +120,77 @@ def process_document(document_structure, pages):
                 )
             )
         else:
-            slice = pages[0].crop(
+            slice = page.crop(
                 (one[0], one[1], one[0] + one[2], one[1] + one[3])
             )
         results[four[i]] = ocr_slice(slice, 1).replace("\n", " ").strip()
         i += 1
+    return results
+
+def clean_stock_names(s):
+    try:
+        s = s.strip().replace("(J)", "").split(" ", 1)[1]
+        for i, c in enumerate(s):
+            if c.isalnum():
+                return s[i:]
+    except:
+        return s
+
+
+def process_document(results, pages):
+    count = 0
+    for k, v in results["sections"].items():
+
+        for _, row in v["rows"].items():
+            for _, column in row.items():
+                if column["section"] == "Investments and Trusts":
+                    count += 1
+    total = float(count)
+    count = 0
+    for k, v in results["sections"].items():
+        logging.info("Processing § %s", k)
+        if k == "Investments and Trusts":
+            print("-" * 90, "//////////| <--- Finish-line" )
+        if results["sections"][k]["empty"] == True:
+            logging.info("§ %s is empty", k)
+            results["sections"][k]["rows"] = {}
+            continue
+
+        for x, row in v["rows"].items():
+            ocr_key = 1
+            for y, column in row.items():
+                page = pages[column["page"]]
+                crop = page.crop(column["coords"])
+                text = ocr_slice(crop, ocr_key).strip()
+                # print(y, column)
+                # if column["section"] == "Investments and Trusts":
+                if column["section"] == 8:
+                    count += 1
+
+                    if count > total/100:
+                        count = 0
+                        print("-", end="", flush=True)
+
+                    ocr_key += 1
+
+                results["sections"][k]["rows"][x][y] = {}
+                if column["section"] == "Investments and Trusts":
+                    results["sections"][k]["rows"][x][y]["text"] = clean_stock_names(text)
+                else:
+                    results["sections"][k]["rows"][x][y]["text"] = text
+                results["sections"][k]["rows"][x][y][
+                    "is_redacted"
+                ] = find_redactions(crop)
+
+    # Process additional information
+    width, height = pages[-2].size
+    slice = pages[-2].crop((0, height * 0.15, width, height * 0.95,))
+    results["Additional Information or Explanations"] = {
+        "is_redacted": find_redactions(slice),
+        "text": ocr_slice(slice, 1),
+    }
+    # Process page one information
+    results = add_first_four(results, pages[0])
+
+    del results["first_four"]
     return results
