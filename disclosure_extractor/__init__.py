@@ -156,25 +156,5 @@ def process_financial_document(
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
 
-    logging.info("Estimating net worth...")
-    results["wealth"] = estimate_investment_net_worth(results)
-
-    logging.info(
-        "Judicial investments appear to be roughly %s to %s with a gain between %s and %s or about %s percent.",
-        results["wealth"]["investment_net_worth"][0],
-        results["wealth"]["investment_net_worth"][1],
-        results["wealth"]["income_gains"][0],
-        results["wealth"]["income_gains"][1],
-        "{:.2f}".format(
-            100
-            * (
-                float(results["wealth"]["income_gains"][1])
-                / (
-                    results["wealth"]["investment_net_worth"][1]
-                    - results["wealth"]["income_gains"][1]
-                )
-            )
-        ),
-    )
     results["success"] = True
     return results
