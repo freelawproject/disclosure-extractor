@@ -119,10 +119,10 @@ def print_results(results):
 
 
 def process_financial_document(
-    file_path=None, url=None, pdf_bytes=None, log_level=None
+    file_path=None, url=None, pdf_bytes=None, show_logs=None
 ):
     """"""
-    if log_level:
+    if show_logs:
         logging.getLogger().setLevel(logging.INFO)
 
     logging.info("Beginning Extraction of Financial Document")
