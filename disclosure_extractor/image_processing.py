@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import pandas as pd
 
+from disclosure_extractor.template import generate_template
+
 section_dict = {
     1: {
         "roman_numeral": "I",
@@ -72,9 +74,9 @@ def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
 
 
 def determine_section_of_contour(checkboxes, rect):
-    """ This does work with my hacky solution.
-        this needs work - but afterwards we should be in good shape to finish this project
-        wanna be bigger than checkbox so sort by y - normally- and as soon as we are larger than
+    """This does work with my hacky solution.
+    this needs work - but afterwards we should be in good shape to finish this project
+    wanna be bigger than checkbox so sort by y - normally- and as soon as we are larger than
     """
     search = [x for x in checkboxes if x[4] == rect[4]]
     for y in sorted(search, key=lambda x: (x[1]))[::-1]:
@@ -88,10 +90,10 @@ def load_template():
         results = json.load(f)
     return results
 
+
 def erode(image, q):
     kernel = np.ones((q, q), np.uint8)
     return cv2.erode(image, kernel, iterations=1)
-
 
 
 def extract_contours_from_page(pages):
@@ -100,7 +102,7 @@ def extract_contours_from_page(pages):
     Return the document structure as JSON data to easily and accurately
     extract out the information.
     """
-    results = load_template()
+    results = generate_template()
 
     pg_num = 0
     checkboxes = []
@@ -190,7 +192,17 @@ def extract_contours_from_page(pages):
                 # and take the inner, cleaner version
                 if hierarchy[0, i, 3] == -1:
                     # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
-                    s7.append((x, y, w, h, pg_num, range(y, y + h), "Investments and Trusts"))
+                    s7.append(
+                        (
+                            x,
+                            y,
+                            w,
+                            h,
+                            pg_num,
+                            range(y, y + h),
+                            "Investments and Trusts",
+                        )
+                    )
 
             # Highlight text input lines  √√√√√√
             if w / h > 7 and w > 150 and y > min_y:
@@ -294,11 +306,13 @@ def extract_contours_from_page(pages):
     other_sections = json.loads(ndf2.to_json(orient="table"))
 
     other_groups = groupby(
-        other_sections["data"], lambda content: content["group"],
+        other_sections["data"],
+        lambda content: content["group"],
     )
 
     investment_group = groupby(
-        investments["data"], lambda content: content["group"],
+        investments["data"],
+        lambda content: content["group"],
     )
 
     row_index = 0
@@ -315,9 +329,15 @@ def extract_contours_from_page(pages):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            column = results["sections"]["Investments and Trusts"]["columns"][col_indx]
-            results["sections"]["Investments and Trusts"]["rows"][row_index][column] = group
-            results["sections"]["Investments and Trusts"]["empty"] = check["Investments and Trusts"]
+            column = results["sections"]["Investments and Trusts"]["columns"][
+                col_indx
+            ]
+            results["sections"]["Investments and Trusts"]["rows"][row_index][
+                column
+            ] = group
+            results["sections"]["Investments and Trusts"]["empty"] = check[
+                "Investments and Trusts"
+            ]
             col_indx += 1
         row_index += 1
 
@@ -352,16 +372,16 @@ def extract_contours_from_page(pages):
 
 
 def process_image(input_image):
-    """
-
-    """
+    """"""
     cv_image = np.array(input_image)
     src = cv_image[:, :, ::-1].copy()
 
     # HSV thresholding to get rid of as much background as possible
     hsv = cv2.cvtColor(src.copy(), cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(
-        src=hsv, lowerb=np.array([0, 0, 0]), upperb=np.array([255, 255, 255]),
+        src=hsv,
+        lowerb=np.array([0, 0, 0]),
+        upperb=np.array([255, 255, 255]),
     )
     result = cv2.bitwise_and(src, src, mask=mask)
     _, gg, _ = cv2.split(result)

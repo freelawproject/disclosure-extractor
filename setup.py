@@ -34,6 +34,7 @@ setup(
     keywords=["legal", "courts"],
     long_description=read("README.rst"),
     packages=find_packages(exclude=("tests",)),
+    package_data={'disclosure_extractor': ['*.json']},
     include_package_data=True,
     classifiers=[
         "Development Status :: 5 - Development",

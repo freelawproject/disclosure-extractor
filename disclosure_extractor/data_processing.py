@@ -16,9 +16,7 @@ def ocr_page(image):
 
 
 def ocr_date(image):
-    """OCR date string from image slice
-
-    """
+    """OCR date string from image slice"""
     text = pytesseract.image_to_string(
         image,
         config="-c tessedit_char_whitelist=01234567890./: preserve_interword_spaces=1x1 --psm %s --oem 3"
@@ -80,9 +78,7 @@ def ocr_variables(slice, column):
 
 
 def ocr_slice(rx, count):
-    """
-
-    """
+    """"""
 
     rx.convert("RGBA")
     w, h = rx.size
@@ -125,6 +121,7 @@ def add_first_four(results, page):
         i += 1
     return results
 
+
 def clean_stock_names(s):
     try:
         s = s.strip().replace("(J)", "").split(" ", 1)[1]
@@ -142,14 +139,14 @@ def process_document(results, pages):
         for _, row in v["rows"].items():
             for _, column in row.items():
                 if column["section"] == "Investments and Trusts":
-                # if column["section"] == 8:
+                    # if column["section"] == 8:
                     count += 1
     total = float(count)
     count = 0
     for k, v in results["sections"].items():
         logging.info("Processing § %s", k)
         if k == "Investments and Trusts":
-            print("-" * 90, "//////////| <--- Finish-line" )
+            print("-" * 90, "//////////| <--- Finish-line")
         if results["sections"][k]["empty"] == True:
             logging.info("§ %s is empty", k)
             results["sections"][k]["rows"] = {}
@@ -162,16 +159,18 @@ def process_document(results, pages):
                 crop = page.crop(column["coords"])
                 text = ocr_slice(crop, ocr_key).strip()
                 if column["section"] == "Investments and Trusts":
-                # if column["section"] == 8:
+                    # if column["section"] == 8:
                     count += 1
-                    if count > total/100 :
+                    if count > total / 100:
                         count = 0
                         print("-", end="", flush=True)
                     ocr_key += 1
 
                 results["sections"][k]["rows"][x][y] = {}
-                if column["section"] == 8: #8 = Investments & Trusts
-                    results["sections"][k]["rows"][x][y]["text"] = clean_stock_names(text)
+                if column["section"] == 8:  # 8 = Investments & Trusts
+                    results["sections"][k]["rows"][x][y][
+                        "text"
+                    ] = clean_stock_names(text)
                 else:
                     results["sections"][k]["rows"][x][y]["text"] = text
                 results["sections"][k]["rows"][x][y][
@@ -180,7 +179,14 @@ def process_document(results, pages):
 
     # Process additional information
     width, height = pages[-2].size
-    slice = pages[-2].crop((0, height * 0.15, width, height * 0.95,))
+    slice = pages[-2].crop(
+        (
+            0,
+            height * 0.15,
+            width,
+            height * 0.95,
+        )
+    )
     results["Additional Information or Explanations"] = {
         "is_redacted": find_redactions(slice),
         "text": ocr_slice(slice, 1),
