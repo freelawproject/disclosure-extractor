@@ -101,8 +101,6 @@ def ocr_slice(rx, count):
         text = ocr_date(rx)
     elif count == 4 or count == 8 or count == 2 or count == 9 or count == 5:
         text = ocr_variables(rx, count)
-    if text == "i":
-        print(count)
     return text
 
 
@@ -144,6 +142,7 @@ def process_document(results, pages):
         for _, row in v["rows"].items():
             for _, column in row.items():
                 if column["section"] == "Investments and Trusts":
+                # if column["section"] == 8:
                     count += 1
     total = float(count)
     count = 0
@@ -162,19 +161,16 @@ def process_document(results, pages):
                 page = pages[column["page"]]
                 crop = page.crop(column["coords"])
                 text = ocr_slice(crop, ocr_key).strip()
-                # print(y, column)
-                # if column["section"] == "Investments and Trusts":
-                if column["section"] == 8:
+                if column["section"] == "Investments and Trusts":
+                # if column["section"] == 8:
                     count += 1
-
-                    if count > total/100:
+                    if count > total/100 :
                         count = 0
                         print("-", end="", flush=True)
-
                     ocr_key += 1
 
                 results["sections"][k]["rows"][x][y] = {}
-                if column["section"] == "Investments and Trusts":
+                if column["section"] == 8: #8 = Investments & Trusts
                     results["sections"][k]["rows"][x][y]["text"] = clean_stock_names(text)
                 else:
                     results["sections"][k]["rows"][x][y]["text"] = text

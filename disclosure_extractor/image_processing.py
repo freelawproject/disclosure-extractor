@@ -88,8 +88,8 @@ def load_template():
         results = json.load(f)
     return results
 
-def erode(image):
-    kernel = np.ones((10, 10), np.uint8)
+def erode(image, q):
+    kernel = np.ones((q, q), np.uint8)
     return cv2.erode(image, kernel, iterations=1)
 
 
@@ -110,7 +110,7 @@ def extract_contours_from_page(pages):
     s7 = []
     little_checkboxes = []
     for page_image in pages:
-
+        page_image = page_image.resize((1653, 2180))
         mode = cv2.RETR_CCOMP
         method = cv2.CHAIN_APPROX_SIMPLE
         cv_image = np.array(page_image)
@@ -184,13 +184,13 @@ def extract_contours_from_page(pages):
                     s0.append((x, y, w, h))
 
             # Cells for Investments and Trusts  √√√√√
-            upper = 180 if height > 3000 else 80
-            if 10 > w / h > 0.9 and upper > h > 40 and len(checkboxes) > 7:
+            # upper = 180 if height > 3000 else 80
+            if 10 > w / h > 0.9 and 80 > h > 40 and len(checkboxes) > 7:
                 # This lets me remove overlapping boxes,
                 # and take the inner, cleaner version
                 if hierarchy[0, i, 3] == -1:
                     # cv2.drawContours(cv_image, contours, i, (70, 70, 255))
-                    s7.append((x, y, w, h, pg_num, range(y, y + h), 8))
+                    s7.append((x, y, w, h, pg_num, range(y, y + h), "Investments and Trusts"))
 
             # Highlight text input lines  √√√√√√
             if w / h > 7 and w > 150 and y > min_y:
@@ -253,7 +253,7 @@ def extract_contours_from_page(pages):
             "h": [x[3] for x in s7],
             "top": [x[1] + 10 for x in s7],
             "page": [x[4] for x in s7],
-            "section": [x[6] for x in s7],
+            "section": "Investments and Trusts",
         }
     )
     df2 = pd.DataFrame(
@@ -348,7 +348,7 @@ def extract_contours_from_page(pages):
 
     results["first_four"] = s0
     results["page_count"] = len(pages)
-    return results
+    return results, len(checkboxes)
 
 
 def process_image(input_image):

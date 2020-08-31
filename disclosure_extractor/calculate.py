@@ -49,7 +49,6 @@ def estimate_investment_net_worth(results):
     gross_values = []
     for k, v in results["sections"]["Investments and Trusts"]["rows"].items():
         if v["C1"]["text"] != "" and v["C1"]["text"] != "{}":
-            print(v['C1'])
             gross_values.append(key_codes[v["C1"]["text"]])
         if v["D3"]["text"] != "" and v["D3"]["text"] != "{}":
             gross_values.append(key_codes[v["D3"]["text"]])
