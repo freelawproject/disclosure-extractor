@@ -157,14 +157,12 @@ def process_document(results, pages):
             for y, column in row.items():
                 page = pages[column["page"]]
                 crop = page.crop(column["coords"])
-                # text = ocr_slice(crop, ocr_key).strip()
                 if column['section'] == "Liabilities":
                     ocr_key += 1
                     if ocr_key == 4:
                         text = ocr_slice(crop, ocr_key).strip()
                     else:
                         text = ocr_slice(crop, 1).strip()
-                    print(text, ocr_key)
                 elif column["section"] == "Investments and Trusts":
                     text = ocr_slice(crop, ocr_key).strip()
                     count += 1
