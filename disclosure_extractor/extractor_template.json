@@ -5,6 +5,7 @@
 	"page_count": 9,
 	"sections": {
 		"Positions": {
+      "order": 1,
       "empty": null,
       "columns": [
         "Position",
@@ -13,36 +14,43 @@
       "rows": {}
     },
 		"Agreements": {
+      "order": 2,
 			"empty": true,
 			"columns": ["Date", "Parties and Terms"],
 			"rows": {}
       },
 		"Non-Investment Income": {
+      "order": 3,
 			"empty": true,
 			"columns": ["Date", "Source and Type", "Income"],
 			"rows": {}
 		},
 		"Non Investment Income Spouse": {
+      "order": 4,
 			"empty": true,
 			"columns": ["Date", "Source and Type"],
 			"rows": {}
 		},
 		"Reimbursements": {
+      "order": 5,
 			"empty": true,
 			"columns": ["Source", "Dates", "Locations", "Purpose", "Items Paid or Provided"],
 			"rows": {}
 		},
 		"Gifts": {
+      "order": 6,
 			"empty": true,
 			"columns": ["Source", "Description", "Value"],
 			"rows": {}
 		},
 		"Liabilities": {
+      "order": 7,
 			"empty": true,
 			"columns": ["Creditor", "Description", "Value Code"],
 			"rows": {}
 		},
 		"Investments and Trusts": {
+      "order": 8,
 			"empty": true,
 			"help": {
 				"A": "Description of Assets",
@@ -61,6 +69,7 @@
 		}
   },
   "Additional Information or Explanations": {
+    "order": 9,
 		"text": null
 	  },
 	"pdf_size": null,
