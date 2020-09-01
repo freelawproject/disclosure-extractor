@@ -164,11 +164,17 @@ def process_financial_document(
     results["success"] = True
     return results
 
-try:
-    import importlib.resources as importlib_resources
-except ImportError:
-    # In PY<3.7 fall-back to backported `importlib_resources`.
-    import importlib_resources
+# try:
+#     import importlib.resources as importlib_resources
+# except ImportError:
+#     # In PY<3.7 fall-back to backported `importlib_resources`.
+#     import importlib_resources
 
 def get_data():
-    return importlib_resources.read_text(__name__, 'extractor_template.json')
+    return
+    # return importlib_resources.read_text(__name__, 'extractor_template.json')
+import json
+def load_template():
+    with open("disclosure_extractor/extractor_template.json", "r") as f:
+        results = json.load(f)
+    return results
