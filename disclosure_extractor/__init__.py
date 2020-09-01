@@ -92,12 +92,15 @@ def print_results(results):
         else str("${:,}".format(x))
         for x in gains
     ]
-    percent = 100 * gains[0] / (net_worth[0] - gains[0])
-    yoy_percent = (
-        color.RED + color.BOLD + str("{:,.2f}%".format(percent)) + color.END
-        if percent > 5
-        else str("{:,.2f}%".format(percent))
-    )
+    if net_worth[0] > 0:
+        percent = 100 * gains[0] / (net_worth[0] - gains[0])
+        yoy_percent = (
+            color.RED + color.BOLD + str("{:,.2f}%".format(percent)) + color.END
+            if percent > 5
+            else str("{:,.2f}%".format(percent))
+        )
+    else:
+        yoy_percent = 0
     debts_low, debts_high = [
         color.RED + color.BOLD + str("${:,}".format(x)) + color.END
         if x > 50000
