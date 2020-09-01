@@ -9,7 +9,7 @@ pandas
 pathlib
 pdf2image==1.7.1
 pdfminer.six==20181108
-Pillow==6.2.2
+Pillow==7.2.0
 pycryptodome==3.9.8
 pytesseract==0.3.5
 python-dateutil==2.8.1
