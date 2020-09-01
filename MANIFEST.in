@@ -1,0 +1,5 @@
+# Or else pip install cannot find README.md on the setup.py under certain conditions.
+include README.rst
+
+# This actually adds the data file.
+include disclosure_extractor/extractor_template.json
