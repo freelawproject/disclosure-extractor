@@ -5,67 +5,11 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from disclosure_extractor.template import generate_template
-
-section_dict = {
-    1: {
-        "roman_numeral": "I",
-        "name": "Positions",
-        "fields": ["Position", "Name of Organization/Entity"],
-    },
-    2: {
-        "roman_numeral": "II",
-        "name": "Agreements",
-        "fields": ["Date", "Parties and Terms"],
-    },
-    3: {
-        "roman_numeral": "IIIA",
-        "name": "Non-Investment Income",
-        "fields": ["Date", "Source and Type", "Income"],
-    },
-    4: {
-        "roman_numeral": "IIIB",
-        "name": "Non Investment Income Spouse",
-        "fields": ["Date", "Source and Type"],
-    },
-    5: {
-        "roman_numeral": "IV",
-        "name": "Reimbursements",
-        "fields": [
-            "Sources",
-            "Dates",
-            "Location",
-            "Purpose",
-            "Items Paid or Provided",
-        ],
-    },
-    6: {
-        "roman_numeral": "V",
-        "name": "Gifts",
-        "fields": ["Source", "Description", "Value"],
-    },
-    7: {
-        "roman_numeral": "VI",
-        "name": "Liabilities",
-        "fields": ["Creditor", "Description", "Value Code"],
-    },
-    8: {
-        "roman_numeral": "VII",
-        "name": "Investments and Trusts",
-        "fields": [
-            "A Description of Asset",
-            "B Amount Code",
-            "B Type",
-            "C Value Code",
-            "C Value Method",
-            "C Type",
-            "D Date",
-            "D Value Code",
-            "D Gain Code",
-            "D Identity of Buyer/Seller",
-        ],
-    },
-}
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    # In PY<3.7 fall-back to backported `importlib_resources`.
+    import importlib_resources
 
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
@@ -86,9 +30,8 @@ def determine_section_of_contour(checkboxes, rect):
 
 
 def load_template():
-    with open("disclosure_extractor/extractor_template.json", "r") as f:
-        results = json.load(f)
-    return results
+    f = importlib_resources.read_text("disclosure_extractor", 'extractor_template.json')
+    return json.loads(f)
 
 
 def erode(image, q):
@@ -102,7 +45,7 @@ def extract_contours_from_page(pages):
     Return the document structure as JSON data to easily and accurately
     extract out the information.
     """
-    results = generate_template()
+    results = load_template()
 
     pg_num = 0
     checkboxes = []
@@ -135,7 +78,7 @@ def extract_contours_from_page(pages):
             if 0.9 <= aspect_ratio <= 1.1 and extent > 0.8 and x < width * 0.2:
                 if hierarchy[0, i, 3] == -1:
                     checkboxes_on_page.append((x, y, w, h, pg_num))
-                    section = (
+                    sect_order = (
                         len(checkboxes) + 1 if len(checkboxes) + 1 < 9 else 8
                     )
                     mean = (
@@ -149,7 +92,11 @@ def extract_contours_from_page(pages):
                     is_empty = False
                     if mean < 230:
                         is_empty = True
-                    section = section_dict[section]["name"]
+
+                    for k, sect in results['sections'].items():
+                        if sect['order'] == sect_order:
+                            section = k
+
                     checkboxes.append(
                         (
                             x,
@@ -163,7 +110,6 @@ def extract_contours_from_page(pages):
                     )
                     check[section] = is_empty
             i -= 1
-        # print(checkboxes)
         i = 0
         min_y = 0
         if checkboxes_on_page:
@@ -372,7 +318,9 @@ def extract_contours_from_page(pages):
 
 
 def process_image(input_image):
-    """"""
+    """
+
+    """
     cv_image = np.array(input_image)
     src = cv_image[:, :, ::-1].copy()
 
