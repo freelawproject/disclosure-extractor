@@ -16,12 +16,14 @@ from disclosure_extractor.image_processing import extract_contours_from_page
 
 
 def print_results(results):
-    """Display the extraction in a nice table printout."""
+    """Display the extraction in a nice table printout.
+
+    """
     cd = {}
     for k, v in results["sections"].items():
         columns = results["sections"][k]["columns"]
-        max_lengths = None
         cd[k] = []
+        max_lengths = [len(x) for x in columns]
         if v["rows"] != {}:
             x = cd[k]
             for _, row in v["rows"].items():
@@ -32,7 +34,6 @@ def print_results(results):
                 if max_lengths == None:
                     max_lengths = [0] * len(row.items())
                 for a, cell in row.items():
-
                     if cell["text"] is None:
                         r.append("")
                         lengths.append(0)
@@ -58,7 +59,7 @@ def print_results(results):
                 "|",
             )
             print("\033[1m", end="")
-            print("|", k.ljust(len(" | ".join(headers))), "\033[0m", "|")
+            print("|", k.ljust(len(" | ".join(headers))-1), "\033[0m", "|")
             print(
                 "|",
                 "-" * len(" | ".join(headers)),
@@ -164,17 +165,3 @@ def process_financial_document(
     results["success"] = True
     return results
 
-# try:
-#     import importlib.resources as importlib_resources
-# except ImportError:
-#     # In PY<3.7 fall-back to backported `importlib_resources`.
-#     import importlib_resources
-
-def get_data():
-    return
-    # return importlib_resources.read_text(__name__, 'extractor_template.json')
-import json
-def load_template():
-    with open("disclosure_extractor/extractor_template.json", "r") as f:
-        results = json.load(f)
-    return results
