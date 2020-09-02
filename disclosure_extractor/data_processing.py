@@ -136,7 +136,7 @@ def clean_stock_names(s):
         return s
 
 
-def process_document(results, pages):
+def process_document(results, pages, show_logs):
     count = 0
     for k, v in results["sections"].items():
 
@@ -150,7 +150,8 @@ def process_document(results, pages):
     for k, v in results["sections"].items():
         logging.info("Processing § %s", k)
         if k == "Investments and Trusts":
-            print("-" * 90, "//////////| <--- Finish-line")
+            if show_logs:
+                print("-" * 90, "//////////| <--- Finish-line")
         if results["sections"][k]["empty"] == True:
             logging.info("§ %s is empty", k)
             results["sections"][k]["rows"] = {}
@@ -172,7 +173,8 @@ def process_document(results, pages):
                     count += 1
                     if count > total / 100:
                         count = 0
-                        print("-", end="", flush=True)
+                        if show_logs:
+                            print("-", end="", flush=True)
                     ocr_key += 1
                 else:
                     text = ocr_slice(crop, ocr_key).strip()

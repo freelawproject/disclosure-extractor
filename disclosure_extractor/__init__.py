@@ -156,7 +156,7 @@ def process_financial_document(
         return {"success": False, "msg": "Failed to process document properly"}
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(document_structure, pages)
+    results = process_document(document_structure, pages, show_logs)
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
 
