@@ -1,5 +1,3 @@
-# Disclosure Extractor
-This program extracts federal judicial financial disclosures.
 
 Disclosure Extractor
 ====================
@@ -9,7 +7,7 @@ of judicial financial data
 It was built for use with Courtlistener.com.
 
 It uses image processing and OCRing to extract data on financial records.
-Additonal functionality estimates a Judge networth from the disclosures.
+Additional functionality estimates a judges' net worth from the disclosures.
 
 Further development is intended and all contributors, corrections and additions are welcome.
 
@@ -24,9 +22,12 @@ a method to extract out the information at a high degree of accuracy.
 Quickstart
 ===========
 
-Below is an example output from Justice Alito's abbreviated output
+Below is an example output from Justice Alitos' abbreviated output
 from his 2011 disclosure, followed by the output in table format with
 calculations.
+
+The main function process_financial_document accepts a url, filepath,
+or PDF as bytes.
 
 ::
 
@@ -35,7 +36,6 @@ calculations.
         print_results
     )
     output = process_financial_document(filepath)
-
 
 
 ::
