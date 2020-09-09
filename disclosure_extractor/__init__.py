@@ -60,14 +60,14 @@ def print_results(results):
                 "-" * len(" | ".join(headers)),
                 "|",
             )
-            print("\033[1m", end="")
+            # print("\033[1m", end="")
             print("|", k.ljust(len(" | ".join(headers))-1), "\033[0m", "|")
             print(
                 "|",
                 "-" * len(" | ".join(headers)),
                 "|",
             )
-            print("\033[1m", end="")
+            # print("\033[1m", end="")
             print("|", " | ".join(headers), "|", "\033[0m")
             print("|", "-" * len(" | ".join(headers)), "|")
             for item in cd[k]:

@@ -175,8 +175,8 @@ def process_document(results, pages, show_logs):
                     count += 1
                     if count > total / 100:
                         count = 0
-                        if show_logs:
-                            print("-", end="", flush=True)
+                        # if show_logs:
+                        #     print("-", end="", flush=True)
                     ocr_key += 1
                 else:
                     text = ocr_slice(crop, ocr_key).strip()
