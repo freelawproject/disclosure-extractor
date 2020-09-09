@@ -173,7 +173,7 @@ def process_document(results, pages):
                     count += 1
                     if count > total / 100:
                         count = 0
-                        print("-", end="", flush=True)
+                        # print("-", end="", flush=True)
                     ocr_key += 1
                 else:
                     text = ocr_slice(crop, ocr_key).strip()
