@@ -58,7 +58,7 @@ def ocr_variables(slice, column):
         width, height = slice.size
         # Crop inside the cell for better results on the single code values
         if column == 4 and width > 200:
-            #This filters out liabilities cropping
+            # This filters out liabilities cropping
             crop = slice
         else:
             crop = slice.crop((width * 0.3, 0, width * 0.7, height * 0.65))
@@ -162,9 +162,11 @@ def process_document(results, pages, show_logs):
         for x, row in v["rows"].items():
             ocr_key = 1
             for y, column in row.items():
-                page = pages[column["page"]]
+                old_page = pages[column["page"]]
+                page = old_page.resize((1653, 2180))
+
                 crop = page.crop(column["coords"])
-                if column['section'] == "Liabilities":
+                if column["section"] == "Liabilities":
                     ocr_key += 1
                     if ocr_key == 4:
                         text = ocr_slice(crop, ocr_key).strip()
@@ -192,7 +194,9 @@ def process_document(results, pages, show_logs):
                 ] = find_redactions(crop)
 
     # Process additional information
-    width, height = pages[-2].size
+    old_page_minus_2 = pages[-2]
+    page_minus_2 = old_page_minus_2.resize((1653, 2180))
+    width, height = page_minus_2.size
     slice = pages[-2].crop(
         (
             0,
