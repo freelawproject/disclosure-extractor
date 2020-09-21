@@ -60,7 +60,7 @@ def ocr_variables(slice, column):
             #This filters out liabilities cropping
             crop = slice
         else:
-            crop = slice.crop((width * 0.3, 0, width * 0.7, height * 0.65))
+            crop = slice.crop((width * 0.2, 0, width * 0.8, height * 0.65))
         text = pytesseract.image_to_string(crop, config="--psm %s --oem 3" % v)
         clean_text = text.replace("\n", "").strip().upper().strip(".")
         if clean_text == "PL" or clean_text == "PI" or clean_text == "P|":
@@ -160,7 +160,9 @@ def process_document(results, pages):
         for x, row in v["rows"].items():
             ocr_key = 1
             for y, column in row.items():
-                page = pages[column["page"]]
+                old_page = pages[column["page"]]
+                page = old_page.resize((1653, 2180))
+
                 crop = page.crop(column["coords"])
                 if column['section'] == "Liabilities":
                     ocr_key += 1
@@ -189,7 +191,9 @@ def process_document(results, pages):
                 ] = find_redactions(crop)
 
     # Process additional information
-    width, height = pages[-2].size
+    old_page_minus_2 = pages[-2]
+    page_minus_2 = old_page_minus_2.resize((1653, 2180))
+    width, height = page_minus_2.size
     slice = pages[-2].crop(
         (
             0,
