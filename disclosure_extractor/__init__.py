@@ -14,7 +14,18 @@ from pdf2image import convert_from_bytes
 
 from disclosure_extractor.calculate import estimate_investment_net_worth, color
 from disclosure_extractor.data_processing import process_document
-from disclosure_extractor.image_processing import extract_contours_from_page
+from disclosure_extractor.image_processing import (
+    extract_contours_from_page,
+    CheckboxesNotFound,
+)
+from disclosure_extractor.judicial_watch_utils import (
+    get_investment_pages,
+    extract_section_VII,
+    extract_section_I_to_VI,
+    identify_sections,
+    get_text_fields,
+    process_addendum,
+)
 
 
 def print_results(results):
@@ -170,3 +181,57 @@ def process_financial_document(
     results["success"] = True
     return results
 
+
+def process_judicial_watch(
+    file_path=None, url=None, pdf_bytes=None, show_logs=None
+):
+    """This is the second and more brute force method for ugly PDFs.
+
+    This method relies upon our own slicing and dicing of the image.
+    """
+    if show_logs:
+        logging.getLogger().setLevel(logging.INFO)
+
+    logging.info("Beginning Extraction of Financial Document")
+
+    if not file_path and not url and not pdf_bytes:
+        logging.warning(
+            "\n\n--> No file, url or pdf_bytes submitted<--\n--> Exiting early\n"
+        )
+        return
+
+    if file_path:
+        logging.info("Opening PDF document from path")
+        pdf_bytes = open(file_path, "rb").read()
+    if url:
+        logging.info("Downloading PDF from URL")
+        pdf_bytes = requests.get(url, stream=True).content
+
+    # Turn the PDF into an array of images
+    pages = convert_from_bytes(pdf_bytes)
+    page_total = len(pages)
+    logging.info("Document is %s pages long" % page_total)
+
+    logging.info("Determining document structure")
+    (
+        non_investment_pages,
+        investment_pages,
+        addendum_page,
+    ) = get_investment_pages(pdf_bytes)
+
+    s1 = get_text_fields(non_investment_pages)
+    document_data = identify_sections(s1)
+    results = extract_section_I_to_VI(document_data, non_investment_pages)
+
+    # Process Section VII
+    results = extract_section_VII(results, investment_pages)
+
+    # Process Section VIII - Addendum
+    addendum_data = process_addendum(addendum_page)
+    results["Additional Information or Explanations"] = addendum_data
+
+    # Calculate net worth and mark processing as a success
+    results["wealth"] = estimate_investment_net_worth(results)
+    results["success"] = True
+
+    return results
