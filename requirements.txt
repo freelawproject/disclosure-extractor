@@ -12,6 +12,7 @@ pdfminer.six==20181108
 Pillow==7.2.0
 pycryptodome==3.9.8
 pytesseract==0.3.5
+pytest
 python-dateutil==2.8.1
 requests==2.24.0
 six==1.12.0
