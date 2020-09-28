@@ -72,7 +72,7 @@ def print_results(results):
                 "|",
             )
             print("\033[1m", end="")
-            print("|", k.ljust(len(" | ".join(headers))-1), "\033[0m", "|")
+            print("|", k.ljust(len(" | ".join(headers)) - 1), "\033[0m", "|")
             print(
                 "|",
                 "-" * len(" | ".join(headers)),
@@ -87,6 +87,8 @@ def print_results(results):
             cd[k] = x
             print("|", "_" * len(" | ".join(headers)), "|")
 
+    if "wealth" not in results.keys():
+        return
     print("\n", "Wealth", "\n===============================")
     net_worth = results["wealth"]["investment_net_worth"]
     gains = results["wealth"]["income_gains"]
