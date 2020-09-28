@@ -5,7 +5,9 @@ import logging
 import re
 
 import pytesseract
+from PIL import Image
 
+from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
 
 
@@ -78,10 +80,7 @@ def ocr_variables(slice, column):
     return "•"
 
 
-def ocr_slice(rx, count):
-    """"""
-
-    rx.convert("RGBA")
+def check_if_blank(rx):
     w, h = rx.size
     crop = rx.crop((w * 0.1, h * 0.1, w * 0.8, h * 0.8))
     data = crop.getdata()
@@ -91,13 +90,25 @@ def ocr_slice(rx, count):
         < 50  # this number needs to fluctuate - or i need to find a way to create this in code,
         #     Current ideas is to grab a predictable slice of page that is white and sample it and use that number as a threshold
     ):  # this may need to fluctuate to be accurate at dropping empty sections to remove gibberish
+        return True
+
+
+def ocr_slice(rx, count):
+    """"""
+
+    cleaned_image = clean_image(rx)
+    if cleaned_image.size == 0:
+        return ""
+
+    cleaned_image_for_ocr = Image.fromarray(cleaned_image)
+    if check_if_blank(cleaned_image_for_ocr):
         return ""
     if count == 1 or count == 6 or count == 10 or count == 3:
-        text = ocr_page(rx)
+        text = ocr_page(cleaned_image_for_ocr)
     elif count == 7:
-        text = ocr_date(rx)
-    elif count == 4 or count == 8 or count == 2 or count == 9 or count == 5:
-        text = ocr_variables(rx, count)
+        text = ocr_date(cleaned_image_for_ocr)
+    else:
+        text = ocr_variables(cleaned_image_for_ocr, count)
     return text
 
 
@@ -128,9 +139,9 @@ def clean_stock_names(s):
         s = s.strip().replace("(J)", "").split(" ", 1)[1]
         for i, c in enumerate(s):
             if c.isalnum():
-                return s[i:]
+                return s[i:].strip()
     except:
-        return s
+        return s.strip()
 
 
 def process_document(results, pages, show_logs):
