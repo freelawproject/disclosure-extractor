@@ -31,10 +31,16 @@ setup(
     author_email=EMAIL,
     maintainer=AUTHOR,
     maintainer_email=EMAIL,
-    keywords=["legal", "financial disclosures", "judiciary", "ocr", "document parsing"],
+    keywords=[
+        "legal",
+        "financial disclosures",
+        "judiciary",
+        "ocr",
+        "document parsing",
+    ],
     long_description=read("README.rst"),
     packages=find_packages(exclude=("tests",)),
-    package_data={'disclosure_extractor': ['*.json']},
+    package_data={"disclosure_extractor": ["*.json"]},
     include_package_data=True,
     classifiers=[
         "Development Status :: 5 - Production/Stable",

@@ -322,9 +322,7 @@ def extract_contours_from_page(pages):
 
 
 def process_image(input_image):
-    """
-
-    """
+    """"""
     cv_image = np.array(input_image)
     src = cv_image[:, :, ::-1].copy()
 

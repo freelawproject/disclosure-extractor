@@ -29,9 +29,7 @@ from disclosure_extractor.judicial_watch_utils import (
 
 
 def print_results(results):
-    """Display the extraction in a nice table printout.
-
-    """
+    """Display the extraction in a nice table printout."""
     cd = {}
     for k, v in results["sections"].items():
         columns = results["sections"][k]["columns"]
