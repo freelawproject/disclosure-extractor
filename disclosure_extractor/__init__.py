@@ -168,7 +168,11 @@ def process_financial_document(
     logging.info("Document is %s pages long" % page_total)
 
     logging.info("Determining document structure")
-    document_structure, check_count = extract_contours_from_page(pages)
+    try:
+        document_structure, check_count = extract_contours_from_page(pages)
+    except:
+        return {"success": False, "msg": CheckboxesNotFound}
+
     if check_count < 8:
         logging.warning("Failed to extract document structure")
         return {"success": False, "msg": "Failed to process document properly"}
