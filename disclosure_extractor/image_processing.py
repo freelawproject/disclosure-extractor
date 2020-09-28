@@ -367,3 +367,85 @@ def find_redactions(slice):
             return True
         i += 1
     return False
+
+
+class Error(Exception):
+    """Base class for other exceptions"""
+
+    pass
+
+
+class CheckboxesNotFound(Error):
+    """Raised when contour for checkboxes could not be determined"""
+
+    pass
+
+
+def clean_image(slice):
+    """"""
+    image = np.array(slice)
+    # Convert RGB to BGR
+    image = image[:, :, ::-1].copy()
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    thresh = cv2.threshold(
+        gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )[1]
+
+    # Remove horizontal
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 1))
+    detected_lines = cv2.morphologyEx(
+        thresh, cv2.MORPH_OPEN, horizontal_kernel, iterations=2
+    )
+    cnts = cv2.findContours(
+        detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    image_h, image_w, _ = image.shape
+    i = 0
+    for c in cnts:
+        x, y, w, h = cv2.boundingRect(c)
+        if image_h - 10 > y > 10:
+            i += 1
+            continue
+        cv2.drawContours(image, cnts, i, (255, 255, 255), 2)
+        i += 1
+
+    # Remove vertical
+    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 10))
+    detected_lines = cv2.morphologyEx(
+        thresh, cv2.MORPH_OPEN, vertical_kernel, iterations=2
+    )
+    cnts = cv2.findContours(
+        detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    for c in cnts:
+        cv2.drawContours(image, [c], -1, (255, 255, 255), 2)
+
+    # Remove whitespace to improve tesseract
+    # image = cv2.imread(f)
+    original = image.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (25, 25), 0)
+    thresh = cv2.threshold(
+        blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )[1]
+
+    # Perform morph operations, first open to remove noise, then close to combine
+    noise_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    opening = cv2.morphologyEx(
+        thresh, cv2.MORPH_OPEN, noise_kernel, iterations=2
+    )
+    close_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    close = cv2.morphologyEx(
+        opening, cv2.MORPH_CLOSE, close_kernel, iterations=3
+    )
+
+    # Find enclosing boundingbox and crop ROI
+    coords = cv2.findNonZero(close)
+    x, y, w, h = cv2.boundingRect(coords)
+    cv2.rectangle(image, (x, y), (x + w, y + h), (36, 255, 12), 2)
+    crop = original[y : y + h, x : x + w]
+
+    return crop
