@@ -108,7 +108,10 @@ def print_results(results):
     if net_worth[0] > 0:
         percent = 100 * gains[0] / (net_worth[0] - gains[0])
         yoy_percent = (
-            color.RED + color.BOLD + str("{:,.2f}%".format(percent)) + color.END
+            color.RED
+            + color.BOLD
+            + str("{:,.2f}%".format(percent))
+            + color.END
             if percent > 5
             else str("{:,.2f}%".format(percent))
         )

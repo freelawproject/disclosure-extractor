@@ -55,14 +55,9 @@ def ocr_variables(slice, column):
         ]
 
     for v in [6, 7, 10]:
-        width, height = slice.size
-        # Crop inside the cell for better results on the single code values
-        if column == 4 and width > 200:
-            # This filters out liabilities cropping
-            crop = slice
-        else:
-            crop = slice.crop((width * 0.3, 0, width * 0.7, height * 0.65))
-        text = pytesseract.image_to_string(crop, config="--psm %s --oem 3" % v)
+        text = pytesseract.image_to_string(
+            slice, config="--psm %s --oem 3" % v
+        )
         clean_text = text.replace("\n", "").strip().upper().strip(".")
         if clean_text == "PL" or clean_text == "PI" or clean_text == "P|":
             return "P1"

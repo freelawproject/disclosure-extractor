@@ -68,20 +68,28 @@ def estimate_investment_net_worth(results):
     cd["income_gains"] = (low, high)
 
     liabilities_total = []
-    for k, v in results["sections"]["Liabilities"]["rows"].items():
-        if v["Value Code"]["text"] != "" and v["Value Code"]["text"] != "{}":
-            liabilities_total.append(key_codes[v["Value Code"]["text"]])
+    try:
+        for k, v in results["sections"]["Liabilities"]["rows"].items():
+            if (
+                v["Value Code"]["text"] != ""
+                and v["Value Code"]["text"] != "•"
+            ):
+                liabilities_total.append(key_codes[v["Value Code"]["text"]])
 
-    low = sum(x[0] for x in liabilities_total)
-    high = sum(x[1] for x in liabilities_total)
-    cd["liabilities"] = (low, high)
-
-    salaries = []
-    for k, v in results["sections"]["Non-Investment Income"]["rows"].items():
-        if v["Income"]["text"] != "" and v["Income"]["text"] != "{}":
-            salary = v["Income"]["text"].replace(",", "").strip("$")
-            if not re.match(r"^-?\d+(?:\.\d+)?$", salary) is None:
-                salaries.append(float(salary))
+        low = sum(x[0] for x in liabilities_total)
+        high = sum(x[1] for x in liabilities_total)
+        cd["liabilities"] = (low, high)
+    except:
+        cd["liabilities"] = (0, 0)
+    try:
+        salaries = []
+        for k, v in results["sections"]["Non-Investment Income"][
+            "rows"
+        ].items():
+            if v["Income"]["text"] != "" and v["Income"]["text"] != "•":
+                salary = v["Income"]["text"].replace(",", "").strip("$")
+                if not re.match(r"^-?\d+(?:\.\d+)?$", salary) is None:
+                    salaries.append(float(salary))
 
     cd["salary_income"] = sum(salaries)
     return cd

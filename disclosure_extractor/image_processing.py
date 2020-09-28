@@ -32,7 +32,9 @@ def determine_section_of_contour(checkboxes, rect):
 
 
 def load_template():
-    f = importlib_resources.read_text("disclosure_extractor", 'extractor_template.json')
+    f = importlib_resources.read_text(
+        "disclosure_extractor", "extractor_template.json"
+    )
     return json.loads(f)
 
 
@@ -95,8 +97,8 @@ def extract_contours_from_page(pages):
                     if mean < 230:
                         is_empty = True
 
-                    for k, sect in results['sections'].items():
-                        if sect['order'] == sect_order:
+                    for k, sect in results["sections"].items():
+                        if sect["order"] == sect_order:
                             section = k
 
                     checkboxes.append(
