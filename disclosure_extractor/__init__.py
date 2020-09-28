@@ -182,10 +182,7 @@ def process_financial_document(
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
 
-    try:
-        results["wealth"] = estimate_investment_net_worth(results)
-    except:
-        pass
+    results["wealth"] = estimate_investment_net_worth(results)
 
     results["success"] = True
     return results
