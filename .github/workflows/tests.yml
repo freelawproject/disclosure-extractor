@@ -18,7 +18,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install linux packages
       run: |
-       sudo apt-get install poppler-utils
+       sudo apt-get install poppler-utils tesseract-ocr tesseract-ocr-eng
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
