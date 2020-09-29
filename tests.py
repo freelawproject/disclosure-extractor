@@ -30,7 +30,7 @@ class DisclosureTests(TestCase):
             pdf_bytes = pdf.read()
         results = process_judicial_watch(pdf_bytes=pdf_bytes)
         print_results(results)
-        self.assertFalse(
+        self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
 
