@@ -12,6 +12,7 @@ pdf2image==1.7.1
 pdfminer.six==20181108
 Pillow==7.2.0
 pycryptodome==3.9.8
+PyPDF2==1.26.0
 pytesseract==0.3.5
 pytest
 python-dateutil==2.8.1
