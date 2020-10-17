@@ -365,6 +365,19 @@ Future
 Deployment
 ==========
 
+Releasing a new version to PyPI is handled in a Github workflow.
+
+Once a version is ready to be released, adjust the version number in the
+setup.py file and add tag the branch in the following format and push to github.
+
+::
+
+    v*.*.*
+
+The action will build and push to PyPI.
+
+
+
 If you wish to create a new version manually, the process is:
 
 1. Update version info in ``setup.py``
