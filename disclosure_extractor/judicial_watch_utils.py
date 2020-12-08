@@ -182,9 +182,9 @@ def identify_sections(s1):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            # print(results["sections"][sect]["columns"], col_indx)
+            # print(results["sections"][sect]["fields"], col_indx)
             try:
-                column = results["sections"][sect_name]["columns"][col_indx]
+                column = results["sections"][sect_name]["fields"][col_indx]
 
                 results["sections"][sect_name]["rows"][row_index][
                     column
@@ -229,7 +229,7 @@ def extract_section_I_to_VI(results, pages):
 def extract_section_VII(results, investment_pages):
     """"""
     k = "Investments and Trusts"
-    columns = results["sections"]["Investments and Trusts"]["columns"]
+    columns = results["sections"]["Investments and Trusts"]["fields"]
     row_count = 0
     for page in investment_pages:
         data = extract_page(page)

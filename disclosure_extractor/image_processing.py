@@ -279,7 +279,7 @@ def extract_contours_from_page(pages):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            column = results["sections"]["Investments and Trusts"]["columns"][
+            column = results["sections"]["Investments and Trusts"]["fields"][
                 col_indx
             ]
             results["sections"]["Investments and Trusts"]["rows"][row_index][
@@ -306,9 +306,9 @@ def extract_contours_from_page(pages):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            # print(results["sections"][sect]["columns"], col_indx)
+            # print(results["sections"][sect]["fields"], col_indx)
             try:
-                column = results["sections"][sect]["columns"][col_indx]
+                column = results["sections"][sect]["fields"][col_indx]
                 results["sections"][sect]["rows"][row_index][column] = group
                 results["sections"][sect]["empty"] = check[sect]
                 col_indx += 1
