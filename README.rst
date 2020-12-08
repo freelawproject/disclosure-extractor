@@ -50,7 +50,7 @@ or PDF as bytes.
           "sections": {
             "Positions": {
               "empty": true,
-              "columns": [
+              "fields": [
                 "Position",
                 "Name of Organization"
               ],
@@ -58,7 +58,7 @@ or PDF as bytes.
             },
             "Agreements": {
               "empty": true,
-              "columns": [
+              "fields": [
                 "Date",
                 "Parties and Terms"
               ],
@@ -66,7 +66,7 @@ or PDF as bytes.
             },
             "Non-Investment Income": {
               "empty": false,
-              "columns": [
+              "fields": [
                 "Date",
                 "Source and Type",
                 "Income"
@@ -90,7 +90,7 @@ or PDF as bytes.
             },
             "Non Investment Income Spouse": {
               "empty": true,
-              "columns": [
+              "fields": [
                 "Date",
                 "Source and Type"
               ],
@@ -98,7 +98,7 @@ or PDF as bytes.
             },
             "Reimbursements": {
               "empty": false,
-              "columns": [
+              "fields": [
                 "Source",
                 "Dates",
                 "Locations",
@@ -132,7 +132,7 @@ or PDF as bytes.
             },
             "Gifts": {
               "empty": true,
-              "columns": [
+              "fields": [
                 "Source",
                 "Description",
                 "Value"
@@ -141,7 +141,7 @@ or PDF as bytes.
             },
             "Liabilities": {
               "empty": true,
-              "columns": [
+              "fields": [
                 "Creditor",
                 "Description",
                 "Value Code"
@@ -162,7 +162,7 @@ or PDF as bytes.
                 "D4": "Gain Code 1",
                 "D5": "Identity of Buyer/Seller (if private)"
               },
-              "columns": [
+              "fields": [
                 "A",
                 "B1",
                 "B2",
