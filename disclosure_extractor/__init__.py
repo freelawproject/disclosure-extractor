@@ -26,13 +26,14 @@ from disclosure_extractor.judicial_watch_utils import (
     get_text_fields,
     process_addendum,
 )
+from disclosure_extractor.post_processing import _fine_tune_results
 
 
 def print_results(results):
     """Display the extraction in a nice table printout."""
     cd = {}
     for k, v in results["sections"].items():
-        columns = results["sections"][k]["columns"]
+        columns = results["sections"][k]["fields"]
         cd[k] = []
         max_lengths = [len(x) for x in columns]
         if v["rows"] != {}:
@@ -179,11 +180,12 @@ def process_financial_document(
     results = process_document(document_structure, pages, show_logs)
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
-
     results["wealth"] = estimate_investment_net_worth(results)
-
     results["success"] = True
-    return results
+
+    # Cleanup raw data & update document structure
+    cleaned_data = _fine_tune_results(results)
+    return cleaned_data
 
 
 def process_judicial_watch(
@@ -236,6 +238,13 @@ def process_judicial_watch(
 
     # Calculate net worth and mark processing as a success
     results["wealth"] = estimate_investment_net_worth(results)
+
+    # Add final data
+    results["page_count"] = page_total
+    results["pdf_size"] = len(pdf_bytes)
     results["success"] = True
 
-    return results
+    # Cleanup raw data & update document structure
+    cleaned_data = _fine_tune_results(results)
+
+    return cleaned_data
