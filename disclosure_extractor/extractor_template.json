@@ -7,7 +7,7 @@
 		"Positions": {
       "order": 1,
       "empty": null,
-      "columns": [
+      "fields": [
         "Position",
         "Name of Organization"
       ],
@@ -16,37 +16,37 @@
 		"Agreements": {
       "order": 2,
 			"empty": true,
-			"columns": ["Date", "Parties and Terms"],
+			"fields": ["Date", "Parties and Terms"],
 			"rows": {}
       },
 		"Non-Investment Income": {
       "order": 3,
 			"empty": true,
-			"columns": ["Date", "Source and Type", "Income"],
+			"fields": ["Date", "Source and Type", "Income"],
 			"rows": {}
 		},
 		"Non Investment Income Spouse": {
       "order": 4,
 			"empty": true,
-			"columns": ["Date", "Source and Type"],
+			"fields": ["Date", "Source and Type"],
 			"rows": {}
 		},
 		"Reimbursements": {
       "order": 5,
 			"empty": true,
-			"columns": ["Source", "Dates", "Locations", "Purpose", "Items Paid or Provided"],
+			"fields": ["Source", "Dates", "Locations", "Purpose", "Items Paid or Provided"],
 			"rows": {}
 		},
 		"Gifts": {
       "order": 6,
 			"empty": true,
-			"columns": ["Source", "Description", "Value"],
+			"fields": ["Source", "Description", "Value"],
 			"rows": {}
 		},
 		"Liabilities": {
       "order": 7,
 			"empty": true,
-			"columns": ["Creditor", "Description", "Value Code"],
+			"fields": ["Creditor", "Description", "Value Code"],
 			"rows": {}
 		},
 		"Investments and Trusts": {
@@ -64,7 +64,7 @@
 				"D4": "Gain Code 1",
 				"D5": "Identity of Buyer/Seller (if private)"
 			},
-			"columns": ["A", "B1", "B2", "C1", "C2", "D1", "D2", "D3", "D4", "D5"],
+			"fields": ["A", "B1", "B2", "C1", "C2", "D1", "D2", "D3", "D4", "D5"],
 			"rows": {}
 		}
   },
