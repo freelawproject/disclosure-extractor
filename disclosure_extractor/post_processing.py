@@ -22,7 +22,6 @@ def _fine_tune_results(results: dict) -> Dict:
 
     # Cleanup Investments and Trusts
     for row in results["sections"]["Investments and Trusts"]["rows"]:
-        print(row["B2"])
         if "rest" in row["B2"]["text"]:
             row["B2"]["text"] = "Interest"
         if "Dist" in row["B2"]["text"]:

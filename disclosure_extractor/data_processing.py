@@ -73,7 +73,7 @@ def ocr_variables(slice, column):
                 return "J"
         if clean_text == "WW" and "W" in possibilities:
             return "W"
-        if clean_text == "CC" and "C" in possibilities:
+        if clean_text.upper() == "CC" and "C" in possibilities:
             return "C"
     # If we can't identify a known possibility return • to indicate that
     # we think a value exists but we did not scrape it successfully.
