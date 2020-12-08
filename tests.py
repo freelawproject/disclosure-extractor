@@ -12,7 +12,6 @@ from unittest import TestCase
 
 from disclosure_extractor import (
     process_judicial_watch,
-    print_results,
     process_financial_document,
 )
 
@@ -29,7 +28,6 @@ class DisclosureTests(TestCase):
         with open(pdf_path, "rb") as pdf:
             pdf_bytes = pdf.read()
         results = process_judicial_watch(pdf_bytes=pdf_bytes)
-        print_results(results)
         self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
