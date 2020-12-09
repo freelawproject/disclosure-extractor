@@ -111,6 +111,7 @@ def check_if_blank(cell_image: Image) -> bool:
         return True
     return False
 
+
 def ocr_slice(image_crop: Image, column_index: int) -> str:
     """OCR cell based on column index
 
