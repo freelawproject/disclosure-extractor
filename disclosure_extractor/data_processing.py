@@ -3,6 +3,7 @@
 import collections
 import logging
 import re
+from typing import Dict, List, Union
 
 import pytesseract
 from PIL import Image
@@ -11,7 +12,12 @@ from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
 
 
-def ocr_page(image):
+def ocr_page(image: Image) -> str:
+    """Ocr the image
+
+    :param image: Image to process
+    :return: Cleaned OCR'd text
+    """
     text = pytesseract.image_to_string(
         image, config="-c preserve_interword_spaces=1x1 --psm %s --oem 3" % 6
     )
@@ -19,8 +25,12 @@ def ocr_page(image):
     return re.sub(" +", " ", text)
 
 
-def ocr_date(image):
-    """OCR date string from image slice"""
+def ocr_date(image: Image) -> str:
+    """Special OCR processing date strings
+
+    :param image: Image to OCR
+    :return: date string if any
+    """
     text = pytesseract.image_to_string(
         image,
         config="-c tessedit_char_whitelist=01234567890./: preserve_interword_spaces=1x1 --psm %s --oem 3"
@@ -31,12 +41,12 @@ def ocr_date(image):
     return text
 
 
-def ocr_variables(slice, column):
-    """
-    Values range from A to H
+def ocr_variables(slice: Image, column: int) -> str:
+    """OCR investment table sections Values range from A to H
 
-    :param file_path:
-    :return:
+    :param slice: Cropped table cell
+    :param column: Column to OCR
+    :return: return cell OCR value
     """
     if column == 2 or column == 9:
         possibilities = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -80,9 +90,17 @@ def ocr_variables(slice, column):
     return "•"
 
 
-def check_if_blank(rx):
-    w, h = rx.size
-    crop = rx.crop((w * 0.1, h * 0.1, w * 0.8, h * 0.8))
+def check_if_blank(cell_image: Image) -> bool:
+    """Check if image is blank
+
+    Sample the color of the black and white content - if it is white enough
+    assume no text and skip.  Function takes a small more centered section to
+    OCR to avoid edge lines.
+    :param cell_image: Image to OCR
+    :return: True or None
+    """
+    w, h = cell_image.size
+    crop = cell_image.crop((w * 0.1, h * 0.1, w * 0.8, h * 0.8))
     data = crop.getdata()
     counts = collections.Counter(data)
     if (
@@ -91,25 +109,38 @@ def check_if_blank(rx):
         #     Current ideas is to grab a predictable slice of page that is white and sample it and use that number as a threshold
     ):  # this may need to fluctuate to be accurate at dropping empty sections to remove gibberish
         return True
+    return False
 
+def ocr_slice(image_crop: Image, column_index: int) -> str:
+    """OCR cell based on column index
 
-def ocr_slice(rx, count):
-    """"""
+    Determine which function to use to OCR paticular column sections of
+    the financial disclosure.
 
-    cleaned_image = clean_image(rx)
+    :param image_crop: Image to OCR
+    :param column_index: Column we are processing
+    :return: text of cell.
+    """
+
+    cleaned_image = clean_image(image_crop)
     if cleaned_image.size == 0:
         return ""
 
     cleaned_image_for_ocr = Image.fromarray(cleaned_image)
     if check_if_blank(cleaned_image_for_ocr):
         return ""
-    if count == 1 or count == 6 or count == 10 or count == 3:
-        text = ocr_page(cleaned_image_for_ocr)
-    elif count == 7:
-        text = ocr_date(cleaned_image_for_ocr)
+    if (
+        column_index == 1
+        or column_index == 6
+        or column_index == 10
+        or column_index == 3
+    ):
+        cell_text = ocr_page(cleaned_image_for_ocr)
+    elif column_index == 7:
+        cell_text = ocr_date(cleaned_image_for_ocr)
     else:
-        text = ocr_variables(cleaned_image_for_ocr, count)
-    return text
+        cell_text = ocr_variables(cleaned_image_for_ocr, column_index)
+    return cell_text
 
 
 def add_first_four(results, page):
@@ -144,7 +175,17 @@ def clean_stock_names(s):
         return s.strip()
 
 
-def process_document(results, pages, show_logs):
+def process_document(
+    results: dict, pages: List, show_logs: bool, resize: bool = False
+) -> Dict:
+    """Iterate over parsed document location data
+
+    :param results: Collected data
+    :param pages: page images
+    :param show_logs: Should we show logging
+    :param resize: Whether to resize teh image
+    :return: OCRd data
+    """
     count = 0
     for k, v in results["sections"].items():
 
@@ -169,8 +210,10 @@ def process_document(results, pages, show_logs):
             ocr_key = 1
             for y, column in row.items():
                 old_page = pages[column["page"]]
-                page = old_page.resize((1653, 2180))
-
+                if resize:
+                    page = old_page.resize((1653, 2180))
+                else:
+                    page = old_page
                 crop = page.crop(column["coords"])
                 if column["section"] == "Liabilities":
                     ocr_key += 1
@@ -201,7 +244,10 @@ def process_document(results, pages, show_logs):
 
     # Process additional information
     old_page_minus_2 = pages[-2]
-    page_minus_2 = old_page_minus_2.resize((1653, 2180))
+    if resize:
+        page_minus_2 = old_page_minus_2.resize((1653, 2180))
+    else:
+        page_minus_2 = old_page_minus_2
     width, height = page_minus_2.size
     slice = pages[-2].crop(
         (

@@ -165,19 +165,25 @@ def process_financial_document(
     pages = convert_from_bytes(pdf_bytes)
     page_total = len(pages)
     logging.info("Document is %s pages long" % page_total)
-
     logging.info("Determining document structure")
+
     try:
-        document_structure, check_count = extract_contours_from_page(pages)
+        document_structure, check_count = extract_contours_from_page(
+            pages, resize=False
+        )
     except:
         return {"success": False, "msg": CheckboxesNotFound}
 
     if check_count < 8:
         logging.warning("Failed to extract document structure")
-        return {"success": False, "msg": "Failed to process document properly"}
+        return {
+            "success": False,
+            "msg": "Failed to process document properly",
+            "checkbox_count_found": check_count,
+        }
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(document_structure, pages, show_logs)
+    results = process_document(document_structure, pages, show_logs, False)
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
     results["wealth"] = estimate_investment_net_worth(results)

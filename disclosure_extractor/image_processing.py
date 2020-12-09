@@ -43,7 +43,7 @@ def erode(image, q):
     return cv2.erode(image, kernel, iterations=1)
 
 
-def extract_contours_from_page(pages):
+def extract_contours_from_page(pages, resize):
     """Process PDF
 
     Return the document structure as JSON data to easily and accurately
@@ -59,7 +59,8 @@ def extract_contours_from_page(pages):
     s7 = []
     little_checkboxes = []
     for page_image in pages:
-        page_image = page_image.resize((1653, 2180))
+        if resize:
+            page_image = page_image.resize((1653, 2180))
         mode = cv2.RETR_CCOMP
         method = cv2.CHAIN_APPROX_SIMPLE
         cv_image = np.array(page_image)
@@ -94,7 +95,8 @@ def extract_contours_from_page(pages):
                         / 3
                     )
                     is_empty = False
-                    if mean < 230:
+                    if mean < 215:
+                        print("MEAN", mean)
                         is_empty = True
 
                     for k, sect in results["sections"].items():
