@@ -32,6 +32,7 @@ class DisclosureTests(TestCase):
         self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
+        print_results(results)
 
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
@@ -42,15 +43,29 @@ class DisclosureTests(TestCase):
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
     def test_process_fd_call(self):
-        """Test successfull parsing of  """
+        """Test if we can process a complex PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2011-Alito-J3.pdf")
         with open(pdf_path, "rb") as pdf:
             pdf_bytes = pdf.read()
         results = process_financial_document(pdf_bytes=pdf_bytes)
-        print_results(results)
         self.assertTrue(
             results["success"], msg="Successfully called process FD."
         )
+        print_results(results)
+
+    def test_simple_pdf(self):
+        """Can we extract from a simple PDF?"""
+        pdf_path = os.path.join(self.assets_dir, "2014-sample.pdf")
+        with open(pdf_path, "rb") as pdf:
+            pdf_bytes = pdf.read()
+        results = process_financial_document(
+            pdf_bytes=pdf_bytes, show_logs=True
+        )
+        self.assertTrue(
+            results["success"],
+            msg="Successfully extracted financial disclosure",
+        )
+        print_results(results)
 
 
 if __name__ == "__main__":
