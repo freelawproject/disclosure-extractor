@@ -12,7 +12,8 @@ from unittest import TestCase
 
 from disclosure_extractor import (
     process_judicial_watch,
-    process_financial_document, print_results,
+    process_financial_document,
+    print_results,
 )
 
 
