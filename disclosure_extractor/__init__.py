@@ -38,7 +38,7 @@ def print_results(results):
         max_lengths = [len(x) for x in columns]
         if v["rows"] != {}:
             x = cd[k]
-            for _, row in v["rows"].items():
+            for row in v["rows"]:
                 if len(row.items()) != len(columns):
                     continue
                 r = []

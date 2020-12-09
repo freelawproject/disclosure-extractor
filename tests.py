@@ -12,7 +12,7 @@ from unittest import TestCase
 
 from disclosure_extractor import (
     process_judicial_watch,
-    process_financial_document,
+    process_financial_document, print_results,
 )
 
 
@@ -46,6 +46,7 @@ class DisclosureTests(TestCase):
         with open(pdf_path, "rb") as pdf:
             pdf_bytes = pdf.read()
         results = process_financial_document(pdf_bytes=pdf_bytes)
+        print_results(results)
         self.assertTrue(
             results["success"], msg="Successfully called process FD."
         )
