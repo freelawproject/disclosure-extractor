@@ -1,3 +1,4 @@
+import re
 from typing import Dict
 
 
@@ -28,5 +29,24 @@ def _fine_tune_results(results: dict) -> Dict:
             row["B2"]["text"] = "Distribution"
         if "idend" in row["B2"]["text"]:
             row["B2"]["text"] = "Dividend"
+
+    count = 0
+    inv = results["sections"]["Investments and Trusts"]["rows"]
+    for i in inv:
+        name = i["A"]["text"]
+        name = re.sub(r"^[\S]{1,3}.?$", "", name)
+        if name == "":
+            if (
+                i["B1"]["text"] == ""
+                and i["B2"]["text"] == ""
+                and i["D1"]["text"] != ""
+            ):
+                if ">" not in inv[count - 1]["A"]["text"]:
+                    inv[count]["A"]["text"] = (
+                        "> " + inv[count - 1]["A"]["text"]
+                    )
+                else:
+                    inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
+        count += 1
 
     return results
