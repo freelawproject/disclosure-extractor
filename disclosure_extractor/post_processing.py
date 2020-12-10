@@ -40,7 +40,8 @@ def _fine_tune_results(results: dict) -> Dict:
                 )
 
                 # Capitalize first words in sentences
-                field["text"] = field["text"][0].upper() + field["text"][1:]
+                if len(field["text"]) > 1:
+                    field["text"] = field["text"][0].upper() + field["text"][1:]
 
                 # Dates - sometimes get addneded a numerical count  (12011 -> 2011; 2.2011 -> 2011)
                 year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
