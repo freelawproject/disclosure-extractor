@@ -96,7 +96,6 @@ def extract_contours_from_page(pages, resize):
                     )
                     is_empty = False
                     if mean < 215:
-                        print("MEAN", mean)
                         is_empty = True
 
                     for k, sect in results["sections"].items():
@@ -271,8 +270,6 @@ def extract_contours_from_page(pages, resize):
     for grouping in investment_group:
         col_indx = 0
         groups = list(grouping[1])
-        sect = groups[0]["section"]
-        # print(sect)
         results["sections"]["Investments and Trusts"]["rows"][row_index] = {}
         for group in sorted(groups, key=lambda x: x["x"]):
             group["coords"] = (
@@ -301,6 +298,10 @@ def extract_contours_from_page(pages, resize):
         if results["sections"][sect]["rows"] == {}:
             row_index = 0
         results["sections"][sect]["rows"][row_index] = {}
+        if len(groups) != len(results["sections"][sect]["fields"]):
+            continue
+        if sorted(groups, key=lambda x: x["x"])[0]["x"] > 120:
+            continue
         for group in sorted(groups, key=lambda x: x["x"]):
             group["coords"] = (
                 group["x"],
@@ -309,6 +310,7 @@ def extract_contours_from_page(pages, resize):
                 (group["y"] + group["h"]),
             )
             # print(results["sections"][sect]["fields"], col_indx)
+
             try:
                 column = results["sections"][sect]["fields"][col_indx]
                 results["sections"][sect]["rows"][row_index][column] = group

@@ -169,7 +169,7 @@ def process_financial_document(
 
     try:
         document_structure, check_count = extract_contours_from_page(
-            pages, resize=False
+            pages, resize=True
         )
     except:
         return {"success": False, "msg": CheckboxesNotFound}
@@ -183,7 +183,9 @@ def process_financial_document(
         }
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(document_structure, pages, show_logs, False)
+    results = process_document(
+        document_structure, pages, show_logs, resize=True
+    )
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
     results["wealth"] = estimate_investment_net_worth(results)

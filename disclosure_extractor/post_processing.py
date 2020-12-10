@@ -16,7 +16,10 @@ def _fine_tune_results(results: dict) -> Dict:
         for k1, v1 in v["rows"].items():
             single_row = []
             for k2, v2 in v1.items():
-                single_row.append(v2["text"])
+                clean_text = re.sub(
+                    r"^(\. )|^([\d]{1,3}\.? ?)", "", v2["text"]
+                )
+                single_row.append(clean_text)
             if len("".join(single_row)) > 3:
                 rows.append(v1)
         v["rows"] = rows
