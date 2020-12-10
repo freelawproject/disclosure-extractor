@@ -24,6 +24,18 @@ def _fine_tune_results(results: dict) -> Dict:
                 rows.append(v1)
         v["rows"] = rows
 
+    # Remove junk from - Unused numbers from the first item in a row
+    # Excluding Investments and Trusts Section
+    for k, sect in results["sections"].items():
+        if k == "Investments and Trusts":
+            continue
+        for row in sect["rows"]:
+            for _, field in row.items():
+                field["text"] = re.sub(
+                    r"^([0-9]{1,2}\.|,) |^(\. )", "", field["text"]
+                )
+                break
+
     # Cleanup Investments and Trusts
     for row in results["sections"]["Investments and Trusts"]["rows"]:
         if "rest" in row["B2"]["text"]:
