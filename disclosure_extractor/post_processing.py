@@ -34,9 +34,27 @@ def _fine_tune_results(results: dict) -> Dict:
                 field["text"] = re.sub(
                     r"^([0-9]{1,2}\.|,) |^(\. )", "", field["text"]
                 )
+                # Clean up (lL. Board Member -> Board Member)
+                field["text"] = re.sub(
+                    r"(^ll\. )|(^[\W?]{1,3} )", "", field["text"]
+                )
+
+                # Capitalize first words in sentences
+                field["text"] = field["text"][0].upper() + field["text"][1:]
+
+                # Dates - sometimes get addneded a numerical count  (12011 -> 2011; 2.2011 -> 2011)
+                year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
+                m = re.match(year_cleanup_regex, field["text"])
+                if m:
+                    if m.group("year1"):
+                        field["text"] = m.group("year1")
+                    elif m.group("year2"):
+                        field["text"] = m.group("year2")
+
                 break
 
-    # Cleanup Investments and Trusts
+    # Cleanup Investments and Trusts B2 field- appears to be dropdown with
+    # free text options
     for row in results["sections"]["Investments and Trusts"]["rows"]:
         if "rest" in row["B2"]["text"]:
             row["B2"]["text"] = "Interest"
@@ -45,9 +63,12 @@ def _fine_tune_results(results: dict) -> Dict:
         if "idend" in row["B2"]["text"]:
             row["B2"]["text"] = "Dividend"
 
+    # Infer values for empty description fields in Investments and Trusts
+    # Mark field as inferred value or not
     count = 0
     inv = results["sections"]["Investments and Trusts"]["rows"]
     for i in inv:
+        inv[count]["A"]["inferred_value"] = False
         name = i["A"]["text"]
         name = re.sub(r"^[\S]{1,3}.?$", "", name)
         if name == "":
@@ -56,12 +77,7 @@ def _fine_tune_results(results: dict) -> Dict:
                 and i["B2"]["text"] == ""
                 and i["D1"]["text"] != ""
             ):
-                if ">" not in inv[count - 1]["A"]["text"]:
-                    inv[count]["A"]["text"] = (
-                        "> " + inv[count - 1]["A"]["text"]
-                    )
-                else:
-                    inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
+                inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
+                inv[count]["A"]["inferred_value"] = True
         count += 1
-
     return results
