@@ -140,7 +140,7 @@ def print_results(results):
 
 
 def process_financial_document(
-    file_path=None, url=None, pdf_bytes=None, show_logs=None
+    file_path=None, url=None, pdf_bytes=None, show_logs=None, resize_pdf=True
 ):
     """"""
     if show_logs:
@@ -169,7 +169,7 @@ def process_financial_document(
 
     try:
         document_structure, check_count = extract_contours_from_page(
-            pages, resize=True
+            pages, resize=resize_pdf
         )
     except:
         return {"success": False, "msg": CheckboxesNotFound}
@@ -184,7 +184,7 @@ def process_financial_document(
 
     logging.info("Extracting content from financial disclosure")
     results = process_document(
-        document_structure, pages, show_logs, resize=True
+        document_structure, pages, show_logs, resize=resize_pdf
     )
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
