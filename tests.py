@@ -59,7 +59,7 @@ class DisclosureTests(TestCase):
         with open(pdf_path, "rb") as pdf:
             pdf_bytes = pdf.read()
         results = process_financial_document(
-            pdf_bytes=pdf_bytes, show_logs=True
+            pdf_bytes=pdf_bytes, show_logs=True, resize_pdf=False
         )
         self.assertTrue(
             results["success"],
