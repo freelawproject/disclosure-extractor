@@ -295,7 +295,6 @@ def extract_contours_from_page(pages, resize):
         if len(irows[r_index].keys()) != 10:
             del irows[r_index]
 
-
     row_index = 0
     for grouping in other_groups:
         col_indx = 0

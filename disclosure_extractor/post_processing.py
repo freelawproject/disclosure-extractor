@@ -16,8 +16,8 @@ def _fine_tune_results(results: dict) -> Dict:
         for k1, v1 in v["rows"].items():
             single_row = []
             for k2, v2 in v1.items():
-                if v2['text'] is None:
-                    v2['text'] = ""
+                if v2["text"] is None:
+                    v2["text"] = ""
                 clean_text = re.sub(
                     r"^(\. )|^([\d]{1,3}(\.|,)? ?)", "", v2["text"]
                 )
@@ -43,7 +43,9 @@ def _fine_tune_results(results: dict) -> Dict:
 
                 # Capitalize first words in sentences
                 if len(field["text"]) > 1:
-                    field["text"] = field["text"][0].upper() + field["text"][1:]
+                    field["text"] = (
+                        field["text"][0].upper() + field["text"][1:]
+                    )
 
                 # Dates - sometimes get addneded a numerical count  (12011 -> 2011; 2.2011 -> 2011)
                 year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
@@ -85,9 +87,9 @@ def _fine_tune_results(results: dict) -> Dict:
         # Clean up D1 Field/Transaction Type
         # to select Buy Additional or Sold Part
         d1 = inv[count]["D1"]
-        if "part)" == d1['text'] or "purt" in d1['text']:
-            d1['text'] = "Sold (part)"
-        if "add'l)" == d1['text'] or "d'l)" in d1['text']:
-            d1['text'] = "Buy (add'l)"
+        if "part)" == d1["text"] or "purt" in d1["text"]:
+            d1["text"] = "Sold (part)"
+        if "add'l)" == d1["text"] or "d'l)" in d1["text"]:
+            d1["text"] = "Buy (add'l)"
         count += 1
     return results
