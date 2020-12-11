@@ -16,8 +16,10 @@ def _fine_tune_results(results: dict) -> Dict:
         for k1, v1 in v["rows"].items():
             single_row = []
             for k2, v2 in v1.items():
+                if v2['text'] is None:
+                    v2['text'] = ""
                 clean_text = re.sub(
-                    r"^(\. )|^([\d]{1,3}\.? ?)", "", v2["text"]
+                    r"^(\. )|^([\d]{1,3}(\.|,)? ?)", "", v2["text"]
                 )
                 single_row.append(clean_text)
             if len("".join(single_row)) > 3:
@@ -51,7 +53,6 @@ def _fine_tune_results(results: dict) -> Dict:
                         field["text"] = m.group("year1")
                     elif m.group("year2"):
                         field["text"] = m.group("year2")
-
                 break
 
     # Cleanup Investments and Trusts B2 field- appears to be dropdown with
@@ -80,5 +81,13 @@ def _fine_tune_results(results: dict) -> Dict:
             ):
                 inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
                 inv[count]["A"]["inferred_value"] = True
+
+        # Clean up D1 Field/Transaction Type
+        # to select Buy Additional or Sold Part
+        d1 = inv[count]["D1"]
+        if "part)" == d1['text'] or "purt" in d1['text']:
+            d1['text'] = "Sold (part)"
+        if "add'l)" == d1['text'] or "d'l)" in d1['text']:
+            d1['text'] = "Buy (add'l)"
         count += 1
     return results

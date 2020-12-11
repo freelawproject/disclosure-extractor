@@ -289,6 +289,12 @@ def extract_contours_from_page(pages, resize):
             ]
             col_indx += 1
         row_index += 1
+    # Remove any incomplete rows
+    irows = results["sections"]["Investments and Trusts"]["rows"]
+    for r_index in irows:
+        if len(irows[r_index].keys()) != 10:
+            del irows[r_index]
+
 
     row_index = 0
     for grouping in other_groups:
