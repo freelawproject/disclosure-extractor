@@ -9,7 +9,6 @@ opencv-python==4.2.0.32
 pandas
 pathlib
 pdf2image
-pdfminer.six==20181108
 Pillow
 pycryptodome==3.9.8
 PyPDF2

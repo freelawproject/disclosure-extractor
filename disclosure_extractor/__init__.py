@@ -253,7 +253,7 @@ def process_judicial_watch(
 
     # Process Section VIII - Addendum
     addendum_data = process_addendum(addendum_page)
-    results["Additional Information or Explanations"] = addendum_data
+    results["addendum"] = addendum_data
 
     # Calculate net worth and mark processing as a success
     results["wealth"] = estimate_investment_net_worth(results)
@@ -303,9 +303,6 @@ def extract_financial_document(
                 page_paths, resize=resize
             )
         except:
-            import time
-
-            time.sleep(2)
             try:
                 logging.info("Switch resizing mechanism")
                 resize = False if resize else True
