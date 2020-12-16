@@ -177,7 +177,7 @@ def clean_stock_names(s):
 
 
 def process_document(
-    results: dict, pages: List, show_logs: bool, resize: bool = False
+    results: dict, images: List, show_logs: bool, resize: bool = False,
 ) -> Dict:
     """Iterate over parsed document location data
 
@@ -185,11 +185,10 @@ def process_document(
     :param pages: page images
     :param show_logs: Should we show logging
     :param resize: Whether to resize teh image
-    :return: OCRd data
+    :return: OCR'd data
     """
     count = 0
     for k, v in results["sections"].items():
-
         for _, row in v["rows"].items():
             for _, column in row.items():
                 if column["section"] == "Investments and Trusts":
@@ -206,15 +205,18 @@ def process_document(
             logging.info("§ %s is empty", k)
             results["sections"][k]["rows"] = {}
             continue
-
+        page_is = None
         for x, row in v["rows"].items():
             ocr_key = 1
             for y, column in row.items():
-                old_page = pages[column["page"]]
-                if resize:
-                    page = old_page.resize((1653, 2180))
-                else:
-                    page = old_page
+                # old_page = pages[column["page"]]
+                if page_is == None or page_is != column["page"]:
+                    page_is = column['page']
+                    old_page = Image.open(images[column["page"]])
+                    if resize:
+                        page = old_page.resize((1653, 2180))
+                    else:
+                        page = old_page
                 crop = page.crop(column["coords"])
                 if column["section"] == "Liabilities":
                     ocr_key += 1
@@ -244,13 +246,14 @@ def process_document(
                 ] = find_redactions(crop)
 
     # Process additional information
-    old_page_minus_2 = pages[-2]
+    old_page_minus_2 = Image.open(images[-2])
+    # old_page_minus_2 = pages[-2]
     if resize:
         page_minus_2 = old_page_minus_2.resize((1653, 2180))
     else:
         page_minus_2 = old_page_minus_2
     width, height = page_minus_2.size
-    slice = pages[-2].crop(
+    slice = Image.open(images[-2]).crop(
         (
             0,
             height * 0.15,
@@ -263,7 +266,9 @@ def process_document(
         "text": ocr_slice(slice, 1),
     }
     # Process page one information
-    results = add_first_four(results, pages[0])
-
-    del results["first_four"]
+    try:
+        results = add_first_four(results, Image.open(images[0]))
+        del results["first_four"]
+    except:
+        pass
     return results

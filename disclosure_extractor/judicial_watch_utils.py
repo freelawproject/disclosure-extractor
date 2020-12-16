@@ -1,4 +1,5 @@
 import json
+import logging
 import tempfile
 from itertools import groupby
 
@@ -201,13 +202,19 @@ def identify_sections(s1):
 
 
 def extract_section_I_to_VI(results, pages):
+    """Extract sections I to VI
 
+    :return:
+    """
+    page_is = None
     for k, v in results["sections"].items():
         for x, row in v["rows"].items():
             ocr_key = 1
             for y, column in row.items():
-                old_page = pages[column["page"]]
-                page = old_page.resize((1653, 2180))
+                if page_is == None or page_is != column["page"]:
+                    page_is = column['page']
+                    old_page = pages[column["page"]]
+                    page = old_page.resize((1653, 2180))
 
                 crop = page.crop(column["coords"])
                 if column["section"] == "Liabilities":
@@ -231,7 +238,10 @@ def extract_section_VII(results, investment_pages):
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
     row_count = 0
+    pg_count = 0
     for page in investment_pages:
+        pg_count += 1
+        logging.info(f"Extracting Page #{pg_count}")
         data = extract_page(page)
         for row in data:
             i = 0

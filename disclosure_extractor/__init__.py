@@ -8,9 +8,12 @@ from __future__ import (
 )
 
 import logging
+from glob import glob
+from tempfile import TemporaryDirectory
+from typing import Dict
 
 import requests
-from pdf2image import convert_from_bytes
+from pdf2image import convert_from_bytes, convert_from_path
 
 from disclosure_extractor.calculate import estimate_investment_net_worth, color
 from disclosure_extractor.data_processing import process_document
@@ -142,7 +145,15 @@ def print_results(results):
 def process_financial_document(
     file_path=None, url=None, pdf_bytes=None, show_logs=None, resize_pdf=True
 ):
-    """"""
+    """Process Financial Documents
+
+    :param file_path:
+    :param url:
+    :param pdf_bytes:
+    :param show_logs:
+    :param resize_pdf:
+    :return:
+    """
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
 
@@ -254,5 +265,59 @@ def process_judicial_watch(
 
     # Cleanup raw data & update document structure
     cleaned_data = _fine_tune_results(results)
+
+    return cleaned_data
+
+
+def extract_financial_document(file_path: str, show_logs: bool=False) -> Dict:
+    """Extract documents with lowered memory footprint
+
+
+    :param file_path: Location of the PDF to extract
+    :param show_logs: Should we show our logs
+    :return: Our results of the extracted content
+    """
+
+    if show_logs:
+        logging.getLogger().setLevel(logging.INFO)
+
+    dir = TemporaryDirectory()
+    convert_from_path(
+        file_path, thread_count=4, output_folder=dir.name, fmt="tiff"
+    )
+    page_paths = sorted(glob(f"{dir.name}/*.tif"))
+    logging.info("Document is %s pages long" % len(page_paths))
+    logging.info("Determining document structure")
+
+    try:
+        document_structure, check_count = extract_contours_from_page(
+            page_paths, resize=True
+        )
+    except:
+        return {"success": False, "msg": CheckboxesNotFound}
+
+
+    if check_count < 8:
+        logging.warning("Failed to extract document structure")
+        return {
+            "success": False,
+            "msg": "Failed to process document properly",
+            "checkbox_count_found": check_count,
+        }
+
+    logging.info("Extracting content from financial disclosure")
+    results = process_document(
+        document_structure, page_paths, show_logs, resize=True
+    )
+    results["page_count"] = len(page_paths)
+    results["pdf_size"] = ""
+    results["wealth"] = estimate_investment_net_worth(results)
+    results["success"] = True
+
+    # Cleanup raw data & update document structure
+    cleaned_data = _fine_tune_results(results)
+
+    if show_logs:
+        print_results(cleaned_data)
 
     return cleaned_data

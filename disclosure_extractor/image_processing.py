@@ -6,6 +6,7 @@ from itertools import groupby
 import cv2
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 try:
     import importlib.resources as importlib_resources
@@ -58,7 +59,9 @@ def extract_contours_from_page(pages, resize):
     s1 = []
     s7 = []
     little_checkboxes = []
-    for page_image in pages:
+    for img_path in pages:
+        page_image = Image.open(img_path)
+    # for page_image in pages:
         if resize:
             page_image = page_image.resize((1653, 2180))
         mode = cv2.RETR_CCOMP
@@ -95,7 +98,7 @@ def extract_contours_from_page(pages, resize):
                         / 3
                     )
                     is_empty = False
-                    if mean < 215:
+                    if mean < 230:
                         is_empty = True
 
                     for k, sect in results["sections"].items():
@@ -138,7 +141,8 @@ def extract_contours_from_page(pages, resize):
 
             # Cells for Investments and Trusts  √√√√√
             # upper = 180 if height > 3000 else 80
-            if 10 > w / h > 0.9 and 80 > h > 40 and len(checkboxes) > 7:
+            # print(w, h, len(checkboxes))
+            if 10 > w / h > 0.9 and 150 > h > 40 and len(checkboxes) > 7:
                 # This lets me remove overlapping boxes,
                 # and take the inner, cleaner version
                 if hierarchy[0, i, 3] == -1:
