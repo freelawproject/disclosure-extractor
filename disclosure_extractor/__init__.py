@@ -109,7 +109,7 @@ def print_results(results):
         else str("${:,}".format(x))
         for x in gains
     ]
-    if net_worth[0] > 0:
+    if (net_worth[0] - gains[0]) > 0:
         percent = 100 * gains[0] / (net_worth[0] - gains[0])
         yoy_percent = (
             color.RED
