@@ -286,7 +286,7 @@ def extract_financial_document(
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
     with TemporaryDirectory() as dir:
-        if bytes:
+        if pdf_bytes:
             convert_from_bytes(
                 pdf_bytes, thread_count=4, output_folder=dir, fmt="tiff"
             )
