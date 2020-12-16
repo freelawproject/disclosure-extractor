@@ -304,21 +304,14 @@ def extract_financial_document(
             )
         except:
             try:
-                logging.info("Switch resizing mechanism")
+                logging.info("Switch resizing again")
                 resize = False if resize else True
-                document_structure, check_count = extract_contours_from_page(
-                    page_paths, resize=True
-                )
+                (
+                    document_structure,
+                    check_count,
+                ) = extract_contours_from_page(page_paths, resize=resize)
             except:
-                try:
-                    logging.info("Switch resizing again")
-                    resize = False if resize else True
-                    (
-                        document_structure,
-                        check_count,
-                    ) = extract_contours_from_page(page_paths, resize=resize)
-                except:
-                    return {"success": False, "msg": CheckboxesNotFound}
+                return {"success": False, "msg": CheckboxesNotFound}
 
         if check_count < 8:
             logging.warning("Failed to extract document structure")
