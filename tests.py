@@ -12,8 +12,8 @@ from unittest import TestCase
 
 from disclosure_extractor import (
     process_judicial_watch,
-    process_financial_document,
     print_results,
+    extract_financial_document,
 )
 
 
@@ -37,29 +37,29 @@ class DisclosureTests(TestCase):
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2004_judicial_watch.pdf")
-        with open(pdf_path, "rb") as pdf:
-            pdf_bytes = pdf.read()
-        results = process_financial_document(pdf_bytes=pdf_bytes)
+        results = extract_financial_document(
+            file_path=pdf_path, show_logs=True
+        )
+
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
     def test_process_fd_call(self):
         """Test if we can process a complex PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2011-Alito-J3.pdf")
-        with open(pdf_path, "rb") as pdf:
-            pdf_bytes = pdf.read()
-        results = process_financial_document(pdf_bytes=pdf_bytes)
+        results = extract_financial_document(
+            file_path=pdf_path, show_logs=True
+        )
+
+        print_results(results)
         self.assertTrue(
             results["success"], msg="Successfully called process FD."
         )
-        print_results(results)
 
     def test_unresized_pdf(self):
         """Can we extract from a simple PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2014-sample.pdf")
-        with open(pdf_path, "rb") as pdf:
-            pdf_bytes = pdf.read()
-        results = process_financial_document(
-            pdf_bytes=pdf_bytes, show_logs=True, resize_pdf=False
+        results = extract_financial_document(
+            file_path=pdf_path, show_logs=True
         )
         self.assertTrue(
             results["success"],
