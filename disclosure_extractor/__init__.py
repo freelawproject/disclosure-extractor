@@ -298,6 +298,7 @@ def extract_financial_document(
             )
         except:
             try:
+                logging.info("Resizing failed, Attempting without resizing")
                 resize = False
                 document_structure, check_count = extract_contours_from_page(
                     page_paths, resize=resize
