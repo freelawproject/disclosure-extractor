@@ -54,17 +54,6 @@ class DisclosureTests(TestCase):
         )
         # print_results(results)
 
-    def test_unresized_pdf(self):
-        """Can we extract from a simple PDF?"""
-        pdf_path = os.path.join(self.assets_dir, "2014-sample.pdf")
-        results = extract_financial_document(
-            file_path=pdf_path, show_logs=True
-        )
-        self.assertTrue(
-            results["success"],
-            msg="Successfully extracted financial disclosure",
-        )
-        # print_results(results)
 
 
 if __name__ == "__main__":
