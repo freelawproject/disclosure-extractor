@@ -50,7 +50,7 @@ class DisclosureTests(TestCase):
         )
 
         self.assertTrue(
-            results["success"], msg="Successfully called process FD."
+            results["success"], msg=results['msg']
         )
         print_results(results)
 

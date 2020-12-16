@@ -282,43 +282,45 @@ def extract_financial_document(
 
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
-
-    dir = TemporaryDirectory()
-    convert_from_path(
-        file_path, thread_count=4, output_folder=dir.name, fmt="tiff"
-    )
-    page_paths = sorted(glob(f"{dir.name}/*.tif"))
-    logging.info("Document is %s pages long" % len(page_paths))
-    logging.info("Determining document structure")
-
     try:
-        document_structure, check_count = extract_contours_from_page(
-            page_paths, resize=True
-        )
-    except:
-        return {"success": False, "msg": CheckboxesNotFound}
+        with TemporaryDirectory() as dir:
+            convert_from_path(
+                file_path, thread_count=4, output_folder=dir, fmt="tiff"
+            )
+            page_paths = sorted(glob(f"{dir}/*.tif"))
+            logging.info("Document is %s pages long" % len(page_paths))
+            logging.info("Determining document structure")
 
-    if check_count < 8:
-        logging.warning("Failed to extract document structure")
-        return {
-            "success": False,
-            "msg": "Failed to process document properly",
-            "checkbox_count_found": check_count,
-        }
+            try:
+                document_structure, check_count = extract_contours_from_page(
+                    page_paths, resize=True
+                )
+            except:
+                return {"success": False, "msg": CheckboxesNotFound}
 
-    logging.info("Extracting content from financial disclosure")
-    results = process_document(
-        document_structure, page_paths, show_logs, resize=True
-    )
-    results["page_count"] = len(page_paths)
-    results["pdf_size"] = ""
-    results["wealth"] = estimate_investment_net_worth(results)
-    results["success"] = True
+            if check_count < 8:
+                logging.warning("Failed to extract document structure")
+                return {
+                    "success": False,
+                    "msg": "Failed to process document properly",
+                    "checkbox_count_found": check_count,
+                }
 
-    # Cleanup raw data & update document structure
-    cleaned_data = _fine_tune_results(results)
+            logging.info("Extracting content from financial disclosure")
+            results = process_document(
+                document_structure, page_paths, show_logs, resize=True
+            )
+            results["page_count"] = len(page_paths)
+        results["pdf_size"] = ""
+        results["wealth"] = estimate_investment_net_worth(results)
+        results["success"] = True
 
-    if show_logs:
-        print_results(cleaned_data)
+        # Cleanup raw data & update document structure
+        cleaned_data = _fine_tune_results(results)
 
-    return cleaned_data
+        if show_logs:
+            print_results(cleaned_data)
+
+        return cleaned_data
+    except Exception as e:
+        return {"success": False, "msg": str(e)}
