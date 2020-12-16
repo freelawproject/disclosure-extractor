@@ -32,7 +32,7 @@ class DisclosureTests(TestCase):
         self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
-        print_results(results)
+        # print_results(results)
 
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
@@ -40,7 +40,6 @@ class DisclosureTests(TestCase):
         results = extract_financial_document(
             file_path=pdf_path, show_logs=True
         )
-
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
     def test_process_fd_call(self):
@@ -50,10 +49,10 @@ class DisclosureTests(TestCase):
             file_path=pdf_path, show_logs=True
         )
 
-        print_results(results)
         self.assertTrue(
             results["success"], msg="Successfully called process FD."
         )
+        # print_results(results)
 
     def test_unresized_pdf(self):
         """Can we extract from a simple PDF?"""
@@ -65,7 +64,7 @@ class DisclosureTests(TestCase):
             results["success"],
             msg="Successfully extracted financial disclosure",
         )
-        print_results(results)
+        # print_results(results)
 
 
 if __name__ == "__main__":
