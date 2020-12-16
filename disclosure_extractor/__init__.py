@@ -270,7 +270,7 @@ def process_judicial_watch(
 
 
 def extract_financial_document(
-    file_path: str, show_logs: bool = False
+    file_path: str, show_logs: bool = False, resize: bool = False
 ) -> Dict:
     """Extract documents with lowered memory footprint
 
@@ -280,7 +280,6 @@ def extract_financial_document(
     :return: Our results of the extracted content
     """
 
-    resize = True
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
 
@@ -298,8 +297,8 @@ def extract_financial_document(
             )
         except:
             try:
-                logging.info("Resizing failed, Attempting without resizing")
-                resize = False
+                logging.info("Switch resizing mechanism")
+                resize = False if resize else True
                 document_structure, check_count = extract_contours_from_page(
                     page_paths, resize=resize
                 )
