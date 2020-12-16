@@ -191,14 +191,15 @@ def process_document(
     :return: OCR'd data
     """
     count = 0
-    for k, v in results["sections"].items():
-        for _, row in v["rows"].items():
-            for _, column in row.items():
-                if column["section"] == "Investments and Trusts":
-                    # if column["section"] == 8:
-                    count += 1
-    total = float(count)
-    count = 0
+    if show_logs:
+        for k, v in results["sections"].items():
+            for _, row in v["rows"].items():
+                for _, column in row.items():
+                    if column["section"] == "Investments and Trusts":
+                        # if column["section"] == 8:
+                        count += 1
+        total = float(count)
+        count = 0
     for k, v in results["sections"].items():
         logging.info("Processing § %s", k)
         if k == "Investments and Trusts":
@@ -229,11 +230,12 @@ def process_document(
                         text = ocr_slice(crop, 1).strip()
                 elif column["section"] == "Investments and Trusts":
                     text = ocr_slice(crop, ocr_key).strip()
-                    count += 1
-                    if count > total / 100:
-                        count = 0
-                        if show_logs:
-                            print("-", end="", flush=True)
+                    if show_logs:
+                        count += 1
+                        if count > total / 100:
+                            count = 0
+                            if show_logs:
+                                print("-", end="", flush=True)
                     ocr_key += 1
                 else:
                     text = ocr_slice(crop, ocr_key).strip()
