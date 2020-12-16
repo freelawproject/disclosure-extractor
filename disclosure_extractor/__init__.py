@@ -289,21 +289,32 @@ def extract_financial_document(
         )
         page_paths = sorted(glob(f"{dir}/*.tif"))
         logging.info("Document is %s pages long" % len(page_paths))
-        logging.info("Determining document structure")
+        logging.info("Determining document structure.")
 
         try:
             document_structure, check_count = extract_contours_from_page(
                 page_paths, resize=resize
             )
         except:
+            import time
+            time.sleep(2)
             try:
                 logging.info("Switch resizing mechanism")
                 resize = False if resize else True
                 document_structure, check_count = extract_contours_from_page(
-                    page_paths, resize=resize
+                    page_paths, resize=True
                 )
             except:
-                return {"success": False, "msg": CheckboxesNotFound}
+                try:
+                    logging.info("Switch resizing again")
+                    resize = False if resize else True
+                    (
+                        document_structure,
+                        check_count,
+                    ) = extract_contours_from_page(page_paths, resize=resize)
+                except:
+                    return {"success": False, "msg": CheckboxesNotFound}
+
 
         if check_count < 8:
             logging.warning("Failed to extract document structure")
