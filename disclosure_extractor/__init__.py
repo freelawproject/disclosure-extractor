@@ -253,7 +253,7 @@ def process_judicial_watch(
 
     # Process Section VIII - Addendum
     addendum_data = process_addendum(addendum_page)
-    results["addendum"] = addendum_data
+    results["Additional Information or Explanations"] = addendum_data
 
     # Calculate net worth and mark processing as a success
     results["wealth"] = estimate_investment_net_worth(results)
