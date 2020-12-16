@@ -177,7 +177,10 @@ def clean_stock_names(s):
 
 
 def process_document(
-    results: dict, images: List, show_logs: bool, resize: bool = False,
+    results: dict,
+    images: List,
+    show_logs: bool,
+    resize: bool = False,
 ) -> Dict:
     """Iterate over parsed document location data
 
@@ -211,7 +214,7 @@ def process_document(
             for y, column in row.items():
                 # old_page = pages[column["page"]]
                 if page_is == None or page_is != column["page"]:
-                    page_is = column['page']
+                    page_is = column["page"]
                     old_page = Image.open(images[column["page"]])
                     if resize:
                         page = old_page.resize((1653, 2180))

@@ -212,7 +212,7 @@ def extract_section_I_to_VI(results, pages):
             ocr_key = 1
             for y, column in row.items():
                 if page_is == None or page_is != column["page"]:
-                    page_is = column['page']
+                    page_is = column["page"]
                     old_page = pages[column["page"]]
                     page = old_page.resize((1653, 2180))
 

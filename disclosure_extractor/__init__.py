@@ -269,7 +269,9 @@ def process_judicial_watch(
     return cleaned_data
 
 
-def extract_financial_document(file_path: str, show_logs: bool=False) -> Dict:
+def extract_financial_document(
+    file_path: str, show_logs: bool = False
+) -> Dict:
     """Extract documents with lowered memory footprint
 
 
@@ -295,7 +297,6 @@ def extract_financial_document(file_path: str, show_logs: bool=False) -> Dict:
         )
     except:
         return {"success": False, "msg": CheckboxesNotFound}
-
 
     if check_count < 8:
         logging.warning("Failed to extract document structure")

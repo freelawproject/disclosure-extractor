@@ -61,7 +61,7 @@ def extract_contours_from_page(pages, resize):
     little_checkboxes = []
     for img_path in pages:
         page_image = Image.open(img_path)
-    # for page_image in pages:
+        # for page_image in pages:
         if resize:
             page_image = page_image.resize((1653, 2180))
         mode = cv2.RETR_CCOMP
