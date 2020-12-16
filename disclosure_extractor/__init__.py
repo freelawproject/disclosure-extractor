@@ -318,4 +318,7 @@ def extract_financial_document(
     # Cleanup raw data & update document structure
     cleaned_data = _fine_tune_results(results)
 
+    if show_logs:
+        print_results(cleaned_data)
+
     return cleaned_data

@@ -38,7 +38,7 @@ class DisclosureTests(TestCase):
         """Can we process an ugly PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2004_judicial_watch.pdf")
         results = extract_financial_document(
-            file_path=pdf_path, show_logs=True
+            file_path=pdf_path, show_logs=False
         )
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
@@ -46,14 +46,13 @@ class DisclosureTests(TestCase):
         """Test if we can process a complex PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2011-Alito-J3.pdf")
         results = extract_financial_document(
-            file_path=pdf_path, show_logs=True
+            file_path=pdf_path, show_logs=False
         )
 
         self.assertTrue(
             results["success"], msg="Successfully called process FD."
         )
-        # print_results(results)
-
+        print_results(results)
 
 
 if __name__ == "__main__":
