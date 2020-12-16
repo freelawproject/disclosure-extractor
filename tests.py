@@ -32,7 +32,7 @@ class DisclosureTests(TestCase):
         self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
-        # print_results(results)
+        print_results(results)
 
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
@@ -48,10 +48,7 @@ class DisclosureTests(TestCase):
         results = extract_financial_document(
             file_path=pdf_path, show_logs=False
         )
-
-        self.assertTrue(
-            results["success"], msg=results['msg']
-        )
+        self.assertTrue(results["success"], msg=results["msg"])
         print_results(results)
 
 
