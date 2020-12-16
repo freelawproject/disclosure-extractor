@@ -280,6 +280,7 @@ def extract_financial_document(
     :return: Our results of the extracted content
     """
 
+    resize = True
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
 
@@ -293,10 +294,16 @@ def extract_financial_document(
 
         try:
             document_structure, check_count = extract_contours_from_page(
-                page_paths, resize=True
+                page_paths, resize=resize
             )
         except:
-            return {"success": False, "msg": CheckboxesNotFound}
+            try:
+                resize = False
+                document_structure, check_count = extract_contours_from_page(
+                    page_paths, resize=resize
+                )
+            except:
+                return {"success": False, "msg": CheckboxesNotFound}
 
         if check_count < 8:
             logging.warning("Failed to extract document structure")
@@ -308,7 +315,7 @@ def extract_financial_document(
 
         logging.info("Extracting content from financial disclosure")
         results = process_document(
-            document_structure, page_paths, show_logs, resize=True
+            document_structure, page_paths, show_logs, resize=resize
         )
         results["page_count"] = len(page_paths)
     results["pdf_size"] = ""
