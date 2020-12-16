@@ -270,7 +270,10 @@ def process_judicial_watch(
 
 
 def extract_financial_document(
-    file_path: str, show_logs: bool = False, resize: bool = False
+    file_path: str = None,
+    pdf_bytes: bytes = None,
+    show_logs: bool = False,
+    resize: bool = False,
 ) -> Dict:
     """Extract documents with lowered memory footprint
 
@@ -282,11 +285,15 @@ def extract_financial_document(
 
     if show_logs:
         logging.getLogger().setLevel(logging.INFO)
-
     with TemporaryDirectory() as dir:
-        convert_from_path(
-            file_path, thread_count=4, output_folder=dir, fmt="tiff"
-        )
+        if bytes:
+            convert_from_bytes(
+                pdf_bytes, thread_count=4, output_folder=dir, fmt="tiff"
+            )
+        else:
+            convert_from_path(
+                file_path, thread_count=4, output_folder=dir, fmt="tiff"
+            )
         page_paths = sorted(glob(f"{dir}/*.tif"))
         logging.info("Document is %s pages long" % len(page_paths))
         logging.info("Determining document structure.")
@@ -297,6 +304,7 @@ def extract_financial_document(
             )
         except:
             import time
+
             time.sleep(2)
             try:
                 logging.info("Switch resizing mechanism")
@@ -314,7 +322,6 @@ def extract_financial_document(
                     ) = extract_contours_from_page(page_paths, resize=resize)
                 except:
                     return {"success": False, "msg": CheckboxesNotFound}
-
 
         if check_count < 8:
             logging.warning("Failed to extract document structure")
