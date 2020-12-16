@@ -38,7 +38,10 @@ def _fine_tune_results(results: dict) -> Dict:
                 )
                 # Clean up (lL. Board Member -> Board Member)
                 field["text"] = re.sub(
-                    r"(^ll\. )|(^[\W?]{1,3} )", "", field["text"]
+                    r"(^\S(?<!U)(\w)?\.? )",
+                    "",
+                    field["text"],
+                    flags=re.IGNORECASE,
                 )
 
                 # Capitalize first words in sentences
@@ -74,7 +77,7 @@ def _fine_tune_results(results: dict) -> Dict:
     for i in inv:
         inv[count]["A"]["inferred_value"] = False
         name = i["A"]["text"]
-        name = re.sub(r"^[\S]{1,3}.?$", "", name)
+        name = re.sub(r"^[\S]{1,4}.?$", "", name)
         if name == "":
             if (
                 i["B1"]["text"] == ""
