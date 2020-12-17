@@ -77,9 +77,12 @@ def _fine_tune_results(results: dict) -> Dict:
     for i in inv:
         inv[count]["A"]["inferred_value"] = False
         name = i["A"]["text"]
-        name = re.sub(r"^[\d][\S]{1,3}.? ?$", "", name)
+        if len(name) < 4:
+            name = ""
+        else:
+            name = re.sub(r"^(\d|\W)(\S){1,3}\.? ?$", "", name)
         if name == "":
-            if i["B1"]["text"] == "" and i["D1"]["text"] != "":
+            if i["D1"]["text"] != "":
                 inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
                 inv[count]["A"]["inferred_value"] = True
 
