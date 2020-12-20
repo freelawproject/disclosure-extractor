@@ -1,8 +1,10 @@
 import re
-from typing import Dict
+from typing import Dict, Union, List
 
 
-def _fine_tune_results(results: dict) -> Dict:
+def _fine_tune_results(
+    results: dict,
+) -> Dict[str, Union[str, int, float, List, Dict]]:
     """Clean results by restructuring document
 
     :param results: Raw data extracted by OCR

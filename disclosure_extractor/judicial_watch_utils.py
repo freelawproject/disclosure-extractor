@@ -1,7 +1,9 @@
 import json
 import logging
 import tempfile
+import threading
 from itertools import groupby
+from typing import Dict, List, Union
 
 import cv2
 import numpy as np
@@ -15,6 +17,8 @@ from disclosure_extractor.image_processing import (
     find_redactions,
     load_template,
 )
+
+sema = threading.Semaphore(value=10)
 
 
 def box_extraction(page):
@@ -30,12 +34,14 @@ def box_extraction(page):
     # Defining a kernel length
     kernel_length = np.array(img).shape[1] // 200
 
-    # A verticle kernel of (1 X kernel_length), which will detect all the verticle lines from the image.
+    # A verticle kernel of (1 X kernel_length), which will
+    # detect all the verticle lines from the image.
     verticle_kernel = cv2.getStructuringElement(
         cv2.MORPH_RECT, (1, kernel_length)
     )
 
-    # A horizontal kernel of (kernel_length X 1), which will help to detect all the horizontal line from the image.
+    # A horizontal kernel of (kernel_length X 1), which will help
+    # to detect all the horizontal line from the image.
     hori_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_length, 1))
 
     # A kernel of (3 X 3) ones.
@@ -49,11 +55,13 @@ def box_extraction(page):
     img_temp2 = cv2.erode(img_bin, hori_kernel, iterations=3)
     horizontal_lines_img = cv2.dilate(img_temp2, hori_kernel, iterations=3)
 
-    # Weighting parameters, this will decide the quantity of an image to be added to make a new image.
+    # Weighting parameters, this will decide the quantity of
+    # an image to be added to make a new image.
     alpha = 0.5
     beta = 1.0 - alpha
 
-    # This function helps to add two image with specific weight parameter to get a third image as summation of two image.
+    # This function helps to add two image with specific weight parameter
+    # to get a third image as summation of two image.
     img_final_bin = cv2.addWeighted(
         verticle_lines_img, alpha, horizontal_lines_img, beta, 0.0
     )
@@ -70,7 +78,11 @@ def box_extraction(page):
 
 
 def get_investment_pages(pdf_bytes):
-    """"""
+    """
+
+    :param pdf_bytes:
+    :return:
+    """
 
     with tempfile.NamedTemporaryFile() as tmp:
         tmp.write(pdf_bytes)
@@ -89,6 +101,11 @@ def get_investment_pages(pdf_bytes):
 
 
 def get_text_fields(non_investment_pages):
+    """
+
+    :param non_investment_pages:
+    :return:
+    """
     pg_num = 0
     s1 = []
     for page in non_investment_pages:
@@ -106,6 +123,11 @@ def get_text_fields(non_investment_pages):
 
 
 def identify_sections(s1):
+    """
+
+    :param s1:
+    :return:
+    """
     results = load_template()
     df2 = pd.DataFrame(
         {
@@ -195,16 +217,22 @@ def identify_sections(s1):
                     "section"
                 ] = sect_name
                 col_indx += 1
-            except:
+            except Exception as e:
+                print(str(e))
                 pass
         row_index += 1
     return results
 
 
-def extract_section_I_to_VI(results, pages):
-    """Extract sections I to VI
+def extract_section_I_to_VI(
+    results: Dict[str, Union[str, int, float, List, Dict]],
+    pages: List[Image.Image],
+):
+    """Extract data from the textfield sections i - vi
 
-    :return:
+    :param results: Dxtracted data
+    :param pages: List of images
+    :return: Extracted data
     """
     page_is = None
     for k, v in results["sections"].items():
@@ -233,41 +261,74 @@ def extract_section_I_to_VI(results, pages):
     return results
 
 
-def extract_section_VII(results, investment_pages):
-    """"""
+def process_page(page, row_count, results, pg_count):
+    sema.acquire()
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
+    logging.info(f"Extracting Investment Page #{pg_count}")
+
+    data = extract_page(page)
+    for row in data:
+        i = 0
+        row_index = str(row_count)
+        results["sections"][k]["rows"][row_index] = {}
+        for item in row:
+            column = columns[i]
+            i += 1
+            color_coverted = cv2.cvtColor(item, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(color_coverted)
+            t = ocr_slice(pil_image, i)
+
+            results["sections"][k]["rows"][row_index][column] = {
+                "text": clean_stock_names(t),
+                "is_redacted": find_redactions(pil_image),
+            }
+        row_count += 1
+
+    print(f"Page #{pg_count} finished.")
+    sema.release()
+    return results
+
+
+def extract_section_VII(
+    # results: Dict[str : Union[str, list, int, float]],
+    results: Dict,
+    investment_pages: List,
+):
+    """
+
+    :param results:
+    :param investment_pages:
+    :return:
+    """
     row_count = 0
     pg_count = 0
+    threads = []
     for page in investment_pages:
         pg_count += 1
-        logging.info(f"Extracting Page #{pg_count}")
-        data = extract_page(page)
-        for row in data:
-            i = 0
-            row_index = str(row_count)
-            results["sections"]["Investments and Trusts"]["rows"][
-                row_index
-            ] = {}
-            for item in row:
-                column = columns[i]
-                i += 1
-                color_coverted = cv2.cvtColor(item, cv2.COLOR_BGR2RGB)
-                pil_image = Image.fromarray(color_coverted)
-                t = ocr_slice(pil_image, i)
-
-                results["sections"][k]["rows"][row_index][column] = {
-                    "text": clean_stock_names(t),
-                    "is_redacted": find_redactions(pil_image),
-                }
-
-            row_count += 1
+        thread = threading.Thread(
+            target=process_page,
+            args=(
+                page,
+                row_count,
+                results,
+                pg_count,
+            ),
+        )
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
 
     return results
 
 
-def process_addendum(addendum_page):
-    """"""
+def process_addendum(addendum_page) -> Dict:
+    """Process the addendum sections of the document
+
+    :param addendum_page:
+    :return:
+    """
     width, height = addendum_page.size
     slice = addendum_page.crop(
         (
@@ -283,8 +344,12 @@ def process_addendum(addendum_page):
     }
 
 
-def extract_page(page):
+def extract_page(page: Image) -> List[List]:
+    """Extract Page rows
 
+    :param page:
+    :return:
+    """
     max_x = 1653
     max_y = 2180
     current_y, last_y, last_y_hit = 0, 0, 0
