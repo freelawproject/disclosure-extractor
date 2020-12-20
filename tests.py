@@ -12,7 +12,7 @@ from unittest import TestCase
 
 from disclosure_extractor import (
     process_judicial_watch,
-    print_results,
+    display_table,
     extract_financial_document,
 )
 
@@ -32,7 +32,7 @@ class DisclosureTests(TestCase):
         self.assertTrue(
             results["success"], msg="Failed Judicial Watch Extraction"
         )
-        print_results(results)
+        display_table(results)
 
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
@@ -49,7 +49,7 @@ class DisclosureTests(TestCase):
             file_path=pdf_path, show_logs=False, resize=True
         )
         self.assertTrue(results["success"], msg="Process failed")
-        print_results(results)
+        display_table(results)
 
 
 if __name__ == "__main__":

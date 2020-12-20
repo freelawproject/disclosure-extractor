@@ -12,6 +12,7 @@ from typing import Dict
 
 import requests
 from pdf2image import convert_from_bytes, convert_from_path
+from prettytable import PrettyTable
 
 from disclosure_extractor.calculate import estimate_investment_net_worth, color
 from disclosure_extractor.data_processing import process_document
@@ -30,65 +31,15 @@ from disclosure_extractor.judicial_watch_utils import (
 from disclosure_extractor.post_processing import _fine_tune_results
 
 
-def print_results(results):
-    """Display the extraction in a nice table printout."""
-    cd = {}
-    for k, v in results["sections"].items():
-        columns = results["sections"][k]["fields"]
-        cd[k] = []
-        max_lengths = [len(x) for x in columns]
-        if v["rows"] != {}:
-            x = cd[k]
-            for row in v["rows"]:
-                if len(row.items()) != len(columns):
-                    continue
-                r = []
-                lengths = []
-                if max_lengths == None:
-                    max_lengths = [0] * len(row.items())
-                for a, cell in row.items():
-                    if cell["text"] is None:
-                        r.append("")
-                        lengths.append(0)
-                        continue
-                    if cell["is_redacted"] == True:
-                        r.append(cell["text"] + " ⬛⬛⬛ ")
-                        lengths.append(len(cell["text"] + " ⬛⬛⬛ ") + 1)
-                    else:
-                        r.append(cell["text"])
-                        lengths.append(len(cell["text"]) + 1)
-                max_lengths = [
-                    x if x > y else y for x, y in zip(lengths, max_lengths)
-                ]
-                if len("".join(r).strip()) == 0:
-                    continue
-                x.append(r)
+def display_wealth(results: Dict[str, str]) -> None:
+    """Print data in nice neat tables
 
-            headers = [x.ljust(y) for x, y in zip(columns, max_lengths)]
-            print("\n")
-            print(
-                "|",
-                "-" * len(" | ".join(headers)),
-                "|",
-            )
-            print("\033[1m", end="")
-            print("|", k.ljust(len(" | ".join(headers)) - 1), "\033[0m", "|")
-            print(
-                "|",
-                "-" * len(" | ".join(headers)),
-                "|",
-            )
-            print("\033[1m", end="")
-            print("|", " | ".join(headers), "|", "\033[0m")
-            print("|", "-" * len(" | ".join(headers)), "|")
-            for item in cd[k]:
-                clean_row = [x.ljust(y) for x, y in zip(item, max_lengths)]
-                print("|", " | ".join(clean_row), "|")
-            cd[k] = x
-            print("|", "_" * len(" | ".join(headers)), "|")
-
+    :param results: Results of extraction
+    :return: None
+    """
     if "wealth" not in results.keys():
         return
+
     print("\n", "Wealth", "\n===============================")
     net_worth = results["wealth"]["investment_net_worth"]
     gains = results["wealth"]["income_gains"]
@@ -138,6 +89,19 @@ def print_results(results):
         "%s" % ("${:,.2f}".format(salaries)),
     )
     print("\n")
+
+
+def display_table(results: Dict) -> None:
+    """Display information"""
+    for title, sect in results["sections"].items():
+        print(title)
+        t = PrettyTable(sect["fields"])
+        for row in sect["rows"]:
+            r = [row[field]["text"] for field in sect["fields"]]
+            t.add_row(r)
+        print(t, end="\n\n")
+
+    display_wealth(results)
 
 
 def process_financial_document(
