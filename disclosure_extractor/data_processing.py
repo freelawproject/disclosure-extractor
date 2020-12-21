@@ -230,9 +230,22 @@ def process_addendum_normal(images, results):
 
 
 def process_row(row, page, results, k, row_count):
+    """Process indivdual row data
+
+    :param row:
+    :param page:
+    :param results:
+    :param k:
+    :param row_count:
+    :return:
+    """
     sema.acquire()
     ocr_key = 1
+    pg_num = None
     for field, column in row.items():
+        if not pg_num:
+            page_number = int(column["page"]) + 1
+
         crop = page.crop(column["coords"])
         if column["section"] == "Liabilities":
             ocr_key += 1
