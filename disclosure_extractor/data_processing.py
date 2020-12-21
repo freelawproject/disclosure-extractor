@@ -6,7 +6,7 @@ import threading
 from typing import Dict, List, Union
 
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
@@ -89,6 +89,16 @@ def ocr_variables(slice: Image, column: int) -> str:
             return "C"
     # If we can't identify a known possibility return • to indicate that
     # we think a value exists but we did not scrape it successfully.
+    # print("Failed", clean_text)
+
+    enhancer = ImageEnhance.Sharpness(slice)
+    enhanced_im = enhancer.enhance(2)
+    emhanced_attempt = pytesseract.image_to_string(
+        enhanced_im, config="--psm 6 --oem 3"
+    )
+    clean_text = emhanced_attempt.replace("\n", "").strip().upper().strip(".")
+    if clean_text in possibilities:
+        return clean_text
     return "•"
 
 
@@ -114,7 +124,9 @@ def check_if_blank(cell_image: Image) -> bool:
     return False
 
 
-def ocr_slice(image_crop: Image, column_index: int) -> str:
+def ocr_slice(
+    image_crop: Image, column_index: int, field=None, section=None
+) -> str:
     """OCR cell based on column index
 
     Determine which function to use to OCR paticular column sections of
@@ -143,6 +155,17 @@ def ocr_slice(image_crop: Image, column_index: int) -> str:
         cell_text = ocr_date(cleaned_image_for_ocr)
     else:
         cell_text = ocr_variables(cleaned_image_for_ocr, column_index)
+
+    if field == "Date" or field == "D2":
+        enhancer = ImageEnhance.Sharpness(image_crop)
+        cleaned_sharpened = enhancer.enhance(2)
+        cell_text = pytesseract.image_to_string(
+            cleaned_sharpened,
+            config="--psm 6 --oem 3 preserve_interword_spaces=1 -c "
+                   "tessedit_char_whitelist=01234567890./: ",
+        ).strip()
+        if "." in cell_text:
+            cell_text = cell_text.split(".")[-1]
     return cell_text
 
 
@@ -163,7 +186,7 @@ def add_first_four(results, page):
             slice = page.crop(
                 (one[0], one[1], one[0] + one[2], one[1] + one[3])
             )
-        results[four[i]] = ocr_slice(slice, 1).replace("\n", " ").strip()
+        results[four[i]] = ocr_slice(slice, 1, None).replace("\n", " ").strip()
         i += 1
     return results
 
@@ -196,40 +219,48 @@ def process_addendum_normal(images, results):
     )
     results["Additional Information or Explanations"] = {
         "is_redacted": find_redactions(slice),
-        "text": ocr_slice(slice, 1),
+        "text": ocr_slice(slice, 1, None),
     }
     return results
 
 
-def process_row(row, page, results, k, x):
+def process_row(row, page, results, k, row_count):
     sema.acquire()
     # logging.warning(f"Extracting Investment Page #")
 
     ocr_key = 1
-    for y, column in row.items():
+    for field, column in row.items():
         crop = page.crop(column["coords"])
         if column["section"] == "Liabilities":
             ocr_key += 1
             if ocr_key == 4:
-                text = ocr_slice(crop, ocr_key).strip()
+                text = ocr_slice(
+                    crop, ocr_key, field, column["section"]
+                ).strip()
             else:
-                text = ocr_slice(crop, 1).strip()
+                text = ocr_slice(crop, 1, field, column["section"]).strip()
         elif column["section"] == "Investments and Trusts":
-            text = ocr_slice(crop, ocr_key).strip()
+            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
             ocr_key += 1
         else:
-            text = ocr_slice(crop, ocr_key).strip()
-        results["sections"][k]["rows"][x][y] = {}
-        if column["section"] == "Investments and Trusts":
-            results["sections"][k]["rows"][x][y]["text"] = clean_stock_names(
-                text
-            )
-        else:
-            results["sections"][k]["rows"][x][y]["text"] = text
-        results["sections"][k]["rows"][x][y]["is_redacted"] = find_redactions(
-            crop
-        )
+            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
 
+        # if column["section"] == "Reimbursements":
+        #     print("Reimbursements")
+        #     print(text)
+
+        results["sections"][k]["rows"][row_count][field] = {}
+        if column["section"] == "Investments and Trusts":
+            results["sections"][k]["rows"][row_count][field][
+                "text"
+            ] = clean_stock_names(text)
+        else:
+            results["sections"][k]["rows"][row_count][field]["text"] = text
+
+        results["sections"][k]["rows"][row_count][field][
+            "is_redacted"
+        ] = find_redactions(crop)
+        # results["sections"][k]["rows"][row_count]['row_number'] = row_count
     sema.release()
     return results
 
@@ -247,13 +278,13 @@ def process_document(
     """
     for k, v in results["sections"].items():
         threads = []
-        for x, row in v["rows"].items():
+        for row_count, row in v["rows"].items():
+
             try:
                 page = pages[row[v["fields"][0]].get("page")]
-
                 thread = threading.Thread(
                     target=process_row,
-                    args=(row, page, results, k, x),
+                    args=(row, page, results, k, row_count),
                 )
                 threads.append(thread)
                 thread.start()
