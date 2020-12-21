@@ -24,6 +24,7 @@ def _fine_tune_results(
                     r"^(\. )|^([\d]{1,3}(\.|,)? ?)", "", v2["text"]
                 )
                 single_row.append(clean_text)
+            v1['row_count'] = k1 + 1
             if len("".join(single_row)) > 3:
                 rows.append(v1)
         v["rows"] = rows
@@ -94,6 +95,8 @@ def _fine_tune_results(
         if "part)" == d1["text"] or "purt" in d1["text"]:
             d1["text"] = "Sold (part)"
         if "add'l)" == d1["text"] or "d'l)" in d1["text"]:
+            d1["text"] = "Buy (add'l)"
+        if "ad" in d1["text"]:
             d1["text"] = "Buy (add'l)"
         count += 1
     return results
