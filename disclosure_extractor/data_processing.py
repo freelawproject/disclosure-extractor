@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import collections
-import logging
 import re
+import threading
 from typing import Dict, List, Union
 
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
+
+sema = threading.Semaphore(value=20)
 
 
 def ocr_page(image: Image) -> str:
@@ -87,6 +89,16 @@ def ocr_variables(slice: Image, column: int) -> str:
             return "C"
     # If we can't identify a known possibility return • to indicate that
     # we think a value exists but we did not scrape it successfully.
+    # print("Failed", clean_text)
+
+    enhancer = ImageEnhance.Sharpness(slice)
+    enhanced_im = enhancer.enhance(2)
+    emhanced_attempt = pytesseract.image_to_string(
+        enhanced_im, config="--psm 6 --oem 3"
+    )
+    clean_text = emhanced_attempt.replace("\n", "").strip().upper().strip(".")
+    if clean_text in possibilities:
+        return clean_text
     return "•"
 
 
@@ -112,7 +124,9 @@ def check_if_blank(cell_image: Image) -> bool:
     return False
 
 
-def ocr_slice(image_crop: Image, column_index: int) -> str:
+def ocr_slice(
+    image_crop: Image, column_index: int, field=None, section=None
+) -> str:
     """OCR cell based on column index
 
     Determine which function to use to OCR paticular column sections of
@@ -141,6 +155,17 @@ def ocr_slice(image_crop: Image, column_index: int) -> str:
         cell_text = ocr_date(cleaned_image_for_ocr)
     else:
         cell_text = ocr_variables(cleaned_image_for_ocr, column_index)
+
+    if field == "Date" or field == "D2":
+        enhancer = ImageEnhance.Sharpness(image_crop)
+        cleaned_sharpened = enhancer.enhance(2)
+        cell_text = pytesseract.image_to_string(
+            cleaned_sharpened,
+            config="--psm 6 --oem 3 preserve_interword_spaces=1 -c "
+            "tessedit_char_whitelist=01234567890./: ",
+        ).strip()
+        if "." in cell_text:
+            cell_text = cell_text.split(".")[-1]
     return cell_text
 
 
@@ -161,7 +186,7 @@ def add_first_four(results, page):
             slice = page.crop(
                 (one[0], one[1], one[0] + one[2], one[1] + one[3])
             )
-        results[four[i]] = ocr_slice(slice, 1).replace("\n", " ").strip()
+        results[four[i]] = ocr_slice(slice, 1, None).replace("\n", " ").strip()
         i += 1
     return results
 
@@ -176,89 +201,15 @@ def clean_stock_names(s):
         return s.strip()
 
 
-def process_document(
-    results: dict,
-    images: List,
-    show_logs: bool,
-    resize: bool = False,
-) -> Dict:
-    """Iterate over parsed document location data
-
-    :param results: Collected data
-    :param pages: page images
-    :param show_logs: Should we show logging
-    :param resize: Whether to resize teh image
-    :return: OCR'd data
-    """
-    count = 0
-    if show_logs:
-        for k, v in results["sections"].items():
-            for _, row in v["rows"].items():
-                for _, column in row.items():
-                    if column["section"] == "Investments and Trusts":
-                        # if column["section"] == 8:
-                        count += 1
-        total = float(count)
-        count = 0
-    for k, v in results["sections"].items():
-        logging.info("Processing § %s", k)
-        if k == "Investments and Trusts":
-            if show_logs:
-                print("-" * 90, "//////////| <--- Finish-line")
-        if results["sections"][k]["empty"] == True:
-            logging.info("§ %s is empty", k)
-            results["sections"][k]["rows"] = {}
-            continue
-        page_is = None
-        for x, row in v["rows"].items():
-            ocr_key = 1
-            for y, column in row.items():
-                # old_page = pages[column["page"]]
-                if page_is == None or page_is != column["page"]:
-                    page_is = column["page"]
-                    old_page = Image.open(images[column["page"]])
-                    if resize:
-                        page = old_page.resize((1653, 2180))
-                    else:
-                        page = old_page
-                crop = page.crop(column["coords"])
-                if column["section"] == "Liabilities":
-                    ocr_key += 1
-                    if ocr_key == 4:
-                        text = ocr_slice(crop, ocr_key).strip()
-                    else:
-                        text = ocr_slice(crop, 1).strip()
-                elif column["section"] == "Investments and Trusts":
-                    text = ocr_slice(crop, ocr_key).strip()
-                    if show_logs:
-                        count += 1
-                        if count > total / 100:
-                            count = 0
-                            if show_logs:
-                                print("-", end="", flush=True)
-                    ocr_key += 1
-                else:
-                    text = ocr_slice(crop, ocr_key).strip()
-                results["sections"][k]["rows"][x][y] = {}
-                if column["section"] == "Investments and Trusts":
-                    results["sections"][k]["rows"][x][y][
-                        "text"
-                    ] = clean_stock_names(text)
-                else:
-                    results["sections"][k]["rows"][x][y]["text"] = text
-                results["sections"][k]["rows"][x][y][
-                    "is_redacted"
-                ] = find_redactions(crop)
-
+def process_addendum_normal(images, results):
     # Process additional information
-    old_page_minus_2 = Image.open(images[-2])
+    old_page_minus_2 = images[-2]
     # old_page_minus_2 = pages[-2]
-    if resize:
-        page_minus_2 = old_page_minus_2.resize((1653, 2180))
-    else:
-        page_minus_2 = old_page_minus_2
+    # page_minus_2 = old_page_minus_2.resize((1653, 2180))
+    # else:
+    page_minus_2 = old_page_minus_2
     width, height = page_minus_2.size
-    slice = Image.open(images[-2]).crop(
+    slice = images[-2].crop(
         (
             0,
             height * 0.15,
@@ -268,12 +219,83 @@ def process_document(
     )
     results["Additional Information or Explanations"] = {
         "is_redacted": find_redactions(slice),
-        "text": ocr_slice(slice, 1),
+        "text": ocr_slice(slice, 1, None),
     }
+    return results
+
+
+def process_row(row, page, results, k, row_count):
+    sema.acquire()
+    ocr_key = 1
+    for field, column in row.items():
+        crop = page.crop(column["coords"])
+        if column["section"] == "Liabilities":
+            ocr_key += 1
+            if ocr_key == 4:
+                text = ocr_slice(
+                    crop, ocr_key, field, column["section"]
+                ).strip()
+            else:
+                text = ocr_slice(crop, 1, field, column["section"]).strip()
+        elif column["section"] == "Investments and Trusts":
+            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
+            ocr_key += 1
+        else:
+            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
+
+        results["sections"][k]["rows"][row_count][field] = {}
+        if column["section"] == "Investments and Trusts":
+            results["sections"][k]["rows"][row_count][field][
+                "text"
+            ] = clean_stock_names(text)
+        else:
+            results["sections"][k]["rows"][row_count][field]["text"] = text
+
+        results["sections"][k]["rows"][row_count][field][
+            "is_redacted"
+        ] = find_redactions(crop)
+    sema.release()
+    return results
+
+
+def process_document(
+    results: Dict[str, Union[str, int, float, List, Dict]],
+    pages: List,
+) -> Dict[str, Union[str, int, float, List, Dict]]:
+    """Iterate over parsed document location data
+
+    :param results: Collected data
+    :param pages: page images
+    :param resize: Whether to resize teh image
+    :return: OCR'd data
+    """
+    for k, v in results["sections"].items():
+        threads = []
+        for row_count, row in v["rows"].items():
+
+            try:
+                page = pages[row[v["fields"][0]].get("page")]
+                thread = threading.Thread(
+                    target=process_row,
+                    args=(row, page, results, k, row_count),
+                )
+                threads.append(thread)
+                thread.start()
+            except Exception as e:
+                # Field doesnt exist for row
+                pass
+
+        for thread in threads:
+            thread.join()
+
+    # Process addendum
+    results = process_addendum_normal(pages, results)
+
     # Process page one information
     try:
-        results = add_first_four(results, Image.open(images[0]))
+        results = add_first_four(results, Image.open(pages[0]))
         del results["first_four"]
     except:
         pass
+
     return results

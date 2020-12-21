@@ -1,8 +1,10 @@
 import re
-from typing import Dict
+from typing import Dict, Union, List
 
 
-def _fine_tune_results(results: dict) -> Dict:
+def _fine_tune_results(
+    results: dict,
+) -> Dict[str, Union[str, int, float, List, Dict]]:
     """Clean results by restructuring document
 
     :param results: Raw data extracted by OCR
@@ -22,6 +24,7 @@ def _fine_tune_results(results: dict) -> Dict:
                     r"^(\. )|^([\d]{1,3}(\.|,)? ?)", "", v2["text"]
                 )
                 single_row.append(clean_text)
+            v1["row_count"] = int(k1) + 1
             if len("".join(single_row)) > 3:
                 rows.append(v1)
         v["rows"] = rows
@@ -77,13 +80,12 @@ def _fine_tune_results(results: dict) -> Dict:
     for i in inv:
         inv[count]["A"]["inferred_value"] = False
         name = i["A"]["text"]
-        name = re.sub(r"^[\S]{1,4}.?$", "", name)
+        if len(name) < 4:
+            name = ""
+        else:
+            name = re.sub(r"^(\d|\W)(\S){1,3}\.? ?$", "", name)
         if name == "":
-            if (
-                i["B1"]["text"] == ""
-                and i["B2"]["text"] == ""
-                and i["D1"]["text"] != ""
-            ):
+            if i["D1"]["text"] != "":
                 inv[count]["A"]["text"] = inv[count - 1]["A"]["text"]
                 inv[count]["A"]["inferred_value"] = True
 
@@ -93,6 +95,8 @@ def _fine_tune_results(results: dict) -> Dict:
         if "part)" == d1["text"] or "purt" in d1["text"]:
             d1["text"] = "Sold (part)"
         if "add'l)" == d1["text"] or "d'l)" in d1["text"]:
+            d1["text"] = "Buy (add'l)"
+        if "ad" in d1["text"]:
             d1["text"] = "Buy (add'l)"
         count += 1
     return results
