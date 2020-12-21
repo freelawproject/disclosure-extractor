@@ -95,9 +95,10 @@ def display_table(results: Dict) -> None:
     """Display information"""
     for title, sect in results["sections"].items():
         print(title)
-        t = PrettyTable(sect["fields"])
+        fields = ['order'] + sect["fields"]
+        t = PrettyTable(fields)
         for row in sect["rows"]:
-            r = [row[field]["text"] for field in sect["fields"]]
+            r = [row['row_count']] + [row[field]["text"] for field in sect["fields"]]
             t.add_row(r)
         print(t, end="\n\n")
 
