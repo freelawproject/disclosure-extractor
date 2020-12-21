@@ -142,23 +142,24 @@ def process_financial_document(
     logging.info("Determining document structure")
 
     try:
-        document_structure, check_count = extract_contours_from_page(
-            pages, resize=resize_pdf
+        document_structure = extract_contours_from_page(
+            pages, False
         )
     except:
+        logging.info("Failed")
         return {"success": False, "msg": CheckboxesNotFound}
 
-    if check_count < 8:
+    if document_structure['found_count'] < 8:
         logging.warning("Failed to extract document structure")
         return {
             "success": False,
             "msg": "Failed to process document properly",
-            "checkbox_count_found": check_count,
+            "checkbox_count_found": document_structure['found_count'],
         }
 
     logging.info("Extracting content from financial disclosure")
     results = process_document(
-        document_structure, pages, show_logs, resize_pdf
+        document_structure, pages
     )
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
@@ -267,15 +268,19 @@ def extract_financial_document(
             pg = page.resize((1653, 2180))
             pages.append(pg)
 
-    document_structure = extract_contours_from_page(pages)
+    document_structure = extract_contours_from_page(pages, False)
 
     if document_structure["found_count"] < 8:
-        logging.warning("Failed to extract document structure")
-        return {
-            "success": False,
-            "msg": "Failed to process document properly",
-            "checkbox_count_found": document_structure["found_count"],
-        }
+        document_structure = extract_contours_from_page(pages, True)
+        # print(document_structure["found_count"])
+        if document_structure["found_count"] < 8:
+
+            logging.warning(f"Failed to extract document structure {document_structure['found_count']}")
+            return {
+                "success": False,
+                "msg": "Failed to process document properly",
+                "checkbox_count_found": document_structure["found_count"],
+            }
 
     logging.info("Extracting content from financial disclosure")
     results = process_document(document_structure, pages)

@@ -64,6 +64,7 @@ def process_contours_page(
     s7: List,
     little_checkboxes: List,
     s1: List,
+    try_again: bool
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
 
     # Add to queue
@@ -89,7 +90,11 @@ def process_contours_page(
         extent = float(area) / rect_area
         aspect_ratio = float(w) / h
         if 0.9 <= aspect_ratio <= 1.1 and extent > 0.8 and x < width * 0.2:
-            if hierarchy[0, i, 3] == -1:
+            if not try_again:
+                move_on = True if hierarchy[0, i, 3] == -1 else False
+            else:
+                move_on = True if hierarchy[0, i, 3] > -1 else False
+            if move_on:
                 checkboxes_on_page.append((x, y, w, h, pg_num))
                 sect_order = (
                     len(checkboxes) + 1 if len(checkboxes) + 1 < 9 else 8
@@ -216,7 +221,6 @@ def process_contours_page(
 
     # Release from queue
     sema.release()
-
     return results
 
 
@@ -372,7 +376,7 @@ def group_other_sections(s1):
     return other_sections
 
 
-def extract_contours_from_page(pages: List[Image]):
+def extract_contours_from_page(pages: List[Image], try_again):
     """Process PDF
 
     Return the document structure as JSON data to easily and accurately
@@ -386,7 +390,7 @@ def extract_contours_from_page(pages: List[Image]):
     pg_num = 0
     for page in pages:
 
-        if pg_num < 1:
+        if pg_num < 3:
             results = process_contours_page(
                 page,
                 results,
@@ -397,6 +401,7 @@ def extract_contours_from_page(pages: List[Image]):
                 s7,
                 little_checkboxes,
                 s1,
+                try_again
             )
         else:
             thread = threading.Thread(
@@ -411,6 +416,7 @@ def extract_contours_from_page(pages: List[Image]):
                     s7,
                     little_checkboxes,
                     s1,
+                    try_again
                 ),
             )
             threads.append(thread)
