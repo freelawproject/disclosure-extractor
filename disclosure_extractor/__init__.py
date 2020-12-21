@@ -92,19 +92,15 @@ def display_wealth(results: Dict[str, str]) -> None:
 
 
 def display_table(results: Dict) -> None:
-    """Display information"""
+    """Display results in nice neat tables"""
     for title, sect in results["sections"].items():
         print(title)
-        fields = ["order"] + sect["fields"]
+        fields = sect["fields"]
         t = PrettyTable(fields)
         for row in sect["rows"]:
-            r = [row["row_count"]] + [
-                row[field]["text"] for field in sect["fields"]
-            ]
+            r = [row[field]["text"] for field in sect["fields"]]
             t.add_row(r)
         print(t, end="\n\n")
-
-    display_wealth(results)
 
 
 def process_financial_document(
@@ -211,7 +207,9 @@ def process_judicial_watch(
     results = extract_section_I_to_VI(document_data, non_investment_pages)
 
     # Process Section VII
-    results = extract_section_VII(results, investment_pages, threaded)
+    results = extract_section_VII(
+        results, investment_pages, threaded, len(non_investment_pages)
+    )
 
     # Process Section VIII - Addendum
     addendum_data = process_addendum(addendum_page)

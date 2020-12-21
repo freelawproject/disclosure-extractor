@@ -355,7 +355,7 @@ def process_addendum(addendum_page) -> Dict:
     )
     return {
         "is_redacted": find_redactions(slice),
-        "text": ocr_slice(slice, 1),
+        "text": ocr_slice(slice, 1, "Addendum"),
     }
 
 
