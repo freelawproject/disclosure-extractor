@@ -170,7 +170,7 @@ def process_financial_document(
 
 
 def process_judicial_watch(
-    file_path=None, url=None, pdf_bytes=None, show_logs=None
+    file_path=None, url=None, pdf_bytes=None, show_logs=None, threaded=False
 ):
     """This is the second and more brute force method for ugly PDFs.
 
@@ -211,7 +211,7 @@ def process_judicial_watch(
     results = extract_section_I_to_VI(document_data, non_investment_pages)
 
     # Process Section VII
-    results = extract_section_VII(results, investment_pages)
+    results = extract_section_VII(results, investment_pages, threaded)
 
     # Process Section VIII - Addendum
     addendum_data = process_addendum(addendum_page)

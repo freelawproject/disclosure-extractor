@@ -294,6 +294,7 @@ def extract_section_VII(
     # results: Dict[str : Union[str, list, int, float]],
     results: Dict,
     investment_pages: List,
+    threaded: bool,
 ):
     """
 
@@ -306,17 +307,25 @@ def extract_section_VII(
     threads = []
     for page in investment_pages:
         pg_count += 1
-        thread = threading.Thread(
-            target=process_page,
-            args=(
+        if threaded:
+            thread = threading.Thread(
+                target=process_page,
+                args=(
+                    page,
+                    row_count,
+                    results,
+                    pg_count,
+                ),
+            )
+            threads.append(thread)
+            thread.start()
+        else:
+            results = process_page(
                 page,
                 row_count,
                 results,
                 pg_count,
-            ),
-        )
-        threads.append(thread)
-        thread.start()
+            )
     for thread in threads:
         thread.join()
 
