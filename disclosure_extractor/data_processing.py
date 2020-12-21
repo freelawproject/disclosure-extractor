@@ -282,6 +282,7 @@ def process_document(
                         args=(row, page, results, k, row_count),
                     )
                     threads.append(thread)
+                    thread.setDaemon(True)
                     thread.start()
                 else:
                     results = process_row(row, page, results, k, row_count)
@@ -290,6 +291,7 @@ def process_document(
                 pass
 
         for thread in threads:
+
             thread.join()
 
     # Process addendum

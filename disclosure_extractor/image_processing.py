@@ -424,6 +424,7 @@ def extract_contours_from_page(pages: List[Image], try_again, threaded):
                 ),
             )
             threads.append(thread)
+            thread.setDaemon(True)
             thread.start()
         pg_num += 1
 
