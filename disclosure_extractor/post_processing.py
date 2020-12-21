@@ -24,7 +24,7 @@ def _fine_tune_results(
                     r"^(\. )|^([\d]{1,3}(\.|,)? ?)", "", v2["text"]
                 )
                 single_row.append(clean_text)
-            v1["row_count"] = int(k1) + 1
+            # v1["row_count"] = int(k1) + 1
             if len("".join(single_row)) > 3:
                 rows.append(v1)
         v["rows"] = rows
