@@ -261,6 +261,7 @@ def process_row(row, page, results, k, row_count):
 def process_document(
     results: Dict[str, Union[str, int, float, List, Dict]],
     pages: List,
+    threaded: bool,
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
     """Iterate over parsed document location data
 
@@ -275,12 +276,15 @@ def process_document(
 
             try:
                 page = pages[row[v["fields"][0]].get("page")]
-                thread = threading.Thread(
-                    target=process_row,
-                    args=(row, page, results, k, row_count),
-                )
-                threads.append(thread)
-                thread.start()
+                if threaded:
+                    thread = threading.Thread(
+                        target=process_row,
+                        args=(row, page, results, k, row_count),
+                    )
+                    threads.append(thread)
+                    thread.start()
+                else:
+                    results = process_row(row, page, results, k, row_count)
             except Exception as e:
                 # Field doesnt exist for row
                 pass

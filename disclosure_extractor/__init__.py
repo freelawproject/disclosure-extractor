@@ -236,6 +236,7 @@ def extract_financial_document(
     pdf_bytes: bytes = None,
     show_logs: bool = False,
     resize: bool = False,
+    threaded: bool = False,
 ) -> Dict:
     """Extract documents with lowered memory footprint
 
@@ -266,10 +267,10 @@ def extract_financial_document(
             pg = page.resize((1653, 2180))
             pages.append(pg)
 
-    document_structure = extract_contours_from_page(pages, False)
+    document_structure = extract_contours_from_page(pages, False, threaded)
 
     if document_structure["found_count"] < 8:
-        document_structure = extract_contours_from_page(pages, True)
+        document_structure = extract_contours_from_page(pages, True, threaded)
         # print(document_structure["found_count"])
         if document_structure["found_count"] < 8:
 
@@ -283,7 +284,7 @@ def extract_financial_document(
             }
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(document_structure, pages)
+    results = process_document(document_structure, pages, threaded)
     results["page_count"] = len(pages)
 
     results["pdf_size"] = ""

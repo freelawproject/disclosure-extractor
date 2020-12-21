@@ -376,7 +376,7 @@ def group_other_sections(s1):
     return other_sections
 
 
-def extract_contours_from_page(pages: List[Image], try_again):
+def extract_contours_from_page(pages: List[Image], try_again, threaded):
     """Process PDF
 
     Return the document structure as JSON data to easily and accurately
@@ -388,9 +388,13 @@ def extract_contours_from_page(pages: List[Image], try_again):
     little_checkboxes = []
     threads = []
     pg_num = 0
+    if threaded:
+        start_at = 3
+    else:
+        start_at = len(pages)
     for page in pages:
 
-        if pg_num < 3:
+        if pg_num < start_at:
             results = process_contours_page(
                 page,
                 results,
