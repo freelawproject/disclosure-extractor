@@ -173,6 +173,8 @@ def process_contours_page(
         if w / h > 7 and w > 150 and y > min_y:
             # if hierarchy[0, i, 3] == -1:
             rect = (x, y, w, h, pg_num, range(y, y + h))
+            if not checkboxes:
+                return results
             section = determine_section_of_contour(checkboxes, rect)
             # section = section_dict[section]['name']
             rect = (x, y, w, h, pg_num, range(y, y + h), section)
@@ -301,8 +303,6 @@ def extract_other_data(results, check, other_sections):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            # print(results["sections"][sect]["fields"], col_indx)
-
             try:
                 column = results["sections"][sect]["fields"][col_indx]
                 results["sections"][sect]["rows"][row_index][column] = group

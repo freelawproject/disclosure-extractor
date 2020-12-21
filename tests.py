@@ -38,11 +38,11 @@ class DisclosureTests(TestCase):
         """Can we process an ugly PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2004_judicial_watch.pdf")
         results = extract_financial_document(
-            file_path=pdf_path, show_logs=False, resize=True
+            file_path=pdf_path, resize=True
         )
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
-    def test_process_fd_call(self):
+    def test_extract_financial_document(self):
         """Test if we can process a complex PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2011-Alito-J3.pdf")
         results = extract_financial_document(
