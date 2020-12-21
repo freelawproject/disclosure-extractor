@@ -206,6 +206,8 @@ def identify_sections(s1):
                 (group["y"] + group["h"]),
             )
             # print(results["sections"][sect]["fields"], col_indx)
+            if len(results["sections"][sect_name]["fields"]) > col_indx:
+                continue
             try:
                 column = results["sections"][sect_name]["fields"][col_indx]
 
@@ -269,6 +271,8 @@ def process_page(page, row_count, results, pg_count):
 
     data = extract_page(page)
     for row in data:
+        if len(row) > len(columns):
+            continue
         i = 0
         row_index = str(row_count)
         results["sections"][k]["rows"][row_index] = {}
@@ -282,6 +286,7 @@ def process_page(page, row_count, results, pg_count):
             results["sections"][k]["rows"][row_index][column] = {
                 "text": clean_stock_names(t),
                 "is_redacted": find_redactions(pil_image),
+                "page_number": pg_count,
             }
         row_count += 1
 
@@ -295,6 +300,7 @@ def extract_section_VII(
     results: Dict,
     investment_pages: List,
     threaded: bool,
+    other_page_count: int,
 ):
     """
 
@@ -303,7 +309,7 @@ def extract_section_VII(
     :return:
     """
     row_count = 0
-    pg_count = 0
+    pg_count = other_page_count
     threads = []
     for page in investment_pages:
         pg_count += 1
