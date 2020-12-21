@@ -64,7 +64,7 @@ def process_contours_page(
     s7: List,
     little_checkboxes: List,
     s1: List,
-    try_again: bool
+    try_again: bool,
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
 
     # Add to queue
@@ -401,7 +401,7 @@ def extract_contours_from_page(pages: List[Image], try_again):
                 s7,
                 little_checkboxes,
                 s1,
-                try_again
+                try_again,
             )
         else:
             thread = threading.Thread(
@@ -416,7 +416,7 @@ def extract_contours_from_page(pages: List[Image], try_again):
                     s7,
                     little_checkboxes,
                     s1,
-                    try_again
+                    try_again,
                 ),
             )
             threads.append(thread)

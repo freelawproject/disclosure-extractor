@@ -162,7 +162,7 @@ def ocr_slice(
         cell_text = pytesseract.image_to_string(
             cleaned_sharpened,
             config="--psm 6 --oem 3 preserve_interword_spaces=1 -c "
-                   "tessedit_char_whitelist=01234567890./: ",
+            "tessedit_char_whitelist=01234567890./: ",
         ).strip()
         if "." in cell_text:
             cell_text = cell_text.split(".")[-1]
@@ -226,8 +226,6 @@ def process_addendum_normal(images, results):
 
 def process_row(row, page, results, k, row_count):
     sema.acquire()
-    # logging.warning(f"Extracting Investment Page #")
-
     ocr_key = 1
     for field, column in row.items():
         crop = page.crop(column["coords"])
@@ -245,10 +243,6 @@ def process_row(row, page, results, k, row_count):
         else:
             text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
 
-        # if column["section"] == "Reimbursements":
-        #     print("Reimbursements")
-        #     print(text)
-
         results["sections"][k]["rows"][row_count][field] = {}
         if column["section"] == "Investments and Trusts":
             results["sections"][k]["rows"][row_count][field][
@@ -260,7 +254,6 @@ def process_row(row, page, results, k, row_count):
         results["sections"][k]["rows"][row_count][field][
             "is_redacted"
         ] = find_redactions(crop)
-        # results["sections"][k]["rows"][row_count]['row_number'] = row_count
     sema.release()
     return results
 

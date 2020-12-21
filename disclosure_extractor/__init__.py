@@ -95,10 +95,12 @@ def display_table(results: Dict) -> None:
     """Display information"""
     for title, sect in results["sections"].items():
         print(title)
-        fields = ['order'] + sect["fields"]
+        fields = ["order"] + sect["fields"]
         t = PrettyTable(fields)
         for row in sect["rows"]:
-            r = [row['row_count']] + [row[field]["text"] for field in sect["fields"]]
+            r = [row["row_count"]] + [
+                row[field]["text"] for field in sect["fields"]
+            ]
             t.add_row(r)
         print(t, end="\n\n")
 
@@ -142,25 +144,21 @@ def process_financial_document(
     logging.info("Determining document structure")
 
     try:
-        document_structure = extract_contours_from_page(
-            pages, False
-        )
+        document_structure = extract_contours_from_page(pages, False)
     except:
         logging.info("Failed")
         return {"success": False, "msg": CheckboxesNotFound}
 
-    if document_structure['found_count'] < 8:
+    if document_structure["found_count"] < 8:
         logging.warning("Failed to extract document structure")
         return {
             "success": False,
             "msg": "Failed to process document properly",
-            "checkbox_count_found": document_structure['found_count'],
+            "checkbox_count_found": document_structure["found_count"],
         }
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(
-        document_structure, pages
-    )
+    results = process_document(document_structure, pages)
     results["page_count"] = page_total
     results["pdf_size"] = len(pdf_bytes)
     results["wealth"] = estimate_investment_net_worth(results)
@@ -275,7 +273,9 @@ def extract_financial_document(
         # print(document_structure["found_count"])
         if document_structure["found_count"] < 8:
 
-            logging.warning(f"Failed to extract document structure {document_structure['found_count']}")
+            logging.warning(
+                f"Failed to extract document structure {document_structure['found_count']}"
+            )
             return {
                 "success": False,
                 "msg": "Failed to process document properly",
