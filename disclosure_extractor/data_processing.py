@@ -136,6 +136,11 @@ def ocr_slice(
     :param column_index: Column we are processing
     :return: text of cell.
     """
+    if field == "Addendum":
+        return pytesseract.image_to_string(
+            image_crop,
+            config="--psm 6 --oem 3 preserve_interword_spaces=1",
+        )
 
     cleaned_image = clean_image(image_crop)
     if cleaned_image.size == 0:
@@ -219,7 +224,7 @@ def process_addendum_normal(images, results):
     )
     results["Additional Information or Explanations"] = {
         "is_redacted": find_redactions(slice),
-        "text": ocr_slice(slice, 1, None),
+        "text": ocr_slice(slice, 1, "Addendum"),
     }
     return results
 
@@ -243,17 +248,17 @@ def process_row(row, page, results, k, row_count):
         else:
             text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
 
-        results["sections"][k]["rows"][row_count][field] = {}
+        data = {}
         if column["section"] == "Investments and Trusts":
-            results["sections"][k]["rows"][row_count][field][
-                "text"
-            ] = clean_stock_names(text)
+            data["text"] = clean_stock_names(text)
         else:
-            results["sections"][k]["rows"][row_count][field]["text"] = text
+            data["text"] = text
 
-        results["sections"][k]["rows"][row_count][field][
-            "is_redacted"
-        ] = find_redactions(crop)
+        data["is_redacted"] = find_redactions(crop)
+        data["page_number"] = page_number
+
+        results["sections"][k]["rows"][row_count][field] = data
+
     sema.release()
     return results
 
