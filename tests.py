@@ -37,9 +37,7 @@ class DisclosureTests(TestCase):
     def test_failing_checkboxes(self):
         """Can we process an ugly PDF?"""
         pdf_path = os.path.join(self.assets_dir, "2004_judicial_watch.pdf")
-        results = extract_financial_document(
-            file_path=pdf_path, resize=True
-        )
+        results = extract_financial_document(file_path=pdf_path, resize=True)
         self.assertFalse(results["success"], msg="Somehow succeeded.")
 
     def test_extract_financial_document(self):
