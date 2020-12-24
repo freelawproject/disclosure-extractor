@@ -16,7 +16,7 @@ except ImportError:
     # In PY<3.7 fall-back to backported `importlib_resources`.
     import importlib_resources
 
-sema = threading.Semaphore(value=20)
+# sema = threading.Semaphore(value=20)
 
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
@@ -68,7 +68,7 @@ def process_contours_page(
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
 
     # Add to queue
-    sema.acquire()
+    # sema.acquire()
 
     mode = cv2.RETR_CCOMP
     method = cv2.CHAIN_APPROX_SIMPLE
@@ -222,7 +222,7 @@ def process_contours_page(
         results["final"] = True if final[4] < 220 else False
 
     # Release from queue
-    sema.release()
+    # sema.release()
     return results
 
 

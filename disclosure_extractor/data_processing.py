@@ -11,7 +11,7 @@ from PIL import Image, ImageEnhance
 from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
 
-sema = threading.Semaphore(value=20)
+# sema = threading.Semaphore(value=20)
 
 
 def ocr_page(image: Image) -> str:
@@ -239,7 +239,7 @@ def process_row(row, page, results, k, row_count):
     :param row_count:
     :return:
     """
-    sema.acquire()
+    # sema.acquire()
     ocr_key = 1
     pg_num = None
     for field, column in row.items():
@@ -272,7 +272,7 @@ def process_row(row, page, results, k, row_count):
 
         results["sections"][k]["rows"][row_count][field] = data
 
-    sema.release()
+    # sema.release()
     return results
 
 

@@ -18,7 +18,7 @@ from disclosure_extractor.image_processing import (
     load_template,
 )
 
-sema = threading.Semaphore(value=10)
+# sema = threading.Semaphore(value=10)
 
 
 def box_extraction(page):
@@ -264,7 +264,7 @@ def extract_section_I_to_VI(
 
 
 def process_page(page, row_count, results, pg_count):
-    sema.acquire()
+    # sema.acquire()
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
     logging.info(f"Extracting Investment Page #{pg_count}")
@@ -291,7 +291,7 @@ def process_page(page, row_count, results, pg_count):
         row_count += 1
 
     print(f"Page #{pg_count} finished.")
-    sema.release()
+    # sema.release()
     return results
 
 
