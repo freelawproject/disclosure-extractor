@@ -19,6 +19,7 @@ except ImportError:
 
 sema = threading.Semaphore(value=10)
 
+
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=grid_size)
     return clahe.apply(img)
