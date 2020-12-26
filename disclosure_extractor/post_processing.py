@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Dict, Union, List
 
@@ -99,4 +100,5 @@ def _fine_tune_results(
         if "ad" in d1["text"]:
             d1["text"] = "Buy (add'l)"
         count += 1
-    return results
+
+    return json.loads(json.dumps(results).replace("\\u2022", "-1"))

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import logging
 import threading
 from itertools import groupby
 from typing import Dict, Union, List
@@ -16,8 +17,7 @@ except ImportError:
     # In PY<3.7 fall-back to backported `importlib_resources`.
     import importlib_resources
 
-# sema = threading.Semaphore(value=20)
-
+sema = threading.Semaphore(value=10)
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=grid_size)
@@ -68,7 +68,7 @@ def process_contours_page(
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
 
     # Add to queue
-    # sema.acquire()
+    sema.acquire()
 
     mode = cv2.RETR_CCOMP
     method = cv2.CHAIN_APPROX_SIMPLE
@@ -222,7 +222,8 @@ def process_contours_page(
         results["final"] = True if final[4] < 220 else False
 
     # Release from queue
-    # sema.release()
+    sema.release()
+    logging.info("Page contours extracted")
     return results
 
 
@@ -393,7 +394,6 @@ def extract_contours_from_page(pages: List[Image], try_again, threaded):
     else:
         start_at = len(pages)
     for page in pages:
-
         if pg_num < start_at:
             results = process_contours_page(
                 page,
