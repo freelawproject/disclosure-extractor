@@ -46,9 +46,9 @@ def estimate_investment_net_worth(results):
     }
     gross_values = []
     for k, v in results["sections"]["Investments and Trusts"]["rows"].items():
-        if v["C1"]["text"] != "" and v["C1"]["text"] != "-1":
+        if v["C1"]["text"] != "" and v["C1"]["text"] != "•":
             gross_values.append(key_codes[v["C1"]["text"]])
-        if v["D3"]["text"] != "" and v["D3"]["text"] != "-1":
+        if v["D3"]["text"] != "" and v["D3"]["text"] != "•":
             gross_values.append(key_codes[v["D3"]["text"]])
 
     low = sum(x[0] for x in gross_values)
@@ -60,7 +60,7 @@ def estimate_investment_net_worth(results):
     for k, v in results["sections"]["Investments and Trusts"]["rows"].items():
         B1, D4 = v["B1"]["text"], v["D4"]["text"]
         for code in [B1, D4]:
-            if code != "" and code != "-1":
+            if code != "" and code != "•":
                 net_change.append(key_codes[code])
 
     low = sum(x[0] for x in net_change)
