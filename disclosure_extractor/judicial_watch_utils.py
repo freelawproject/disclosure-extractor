@@ -238,7 +238,9 @@ def extract_section_I_to_VI(
     """
     page_is = None
     for k, v in results["sections"].items():
+        print(k)
         for x, row in v["rows"].items():
+            print(x)
             ocr_key = 1
             for y, column in row.items():
                 if page_is == None or page_is != column["page"]:
@@ -263,6 +265,7 @@ def extract_section_I_to_VI(
     return results
 
 
+# Deprecated and replaced leaving for now.
 def process_page(page, row_count, results, pg_count):
     sema.acquire()
     k = "Investments and Trusts"
@@ -282,7 +285,8 @@ def process_page(page, row_count, results, pg_count):
             color_coverted = cv2.cvtColor(item, cv2.COLOR_BGR2RGB)
             pil_image = Image.fromarray(color_coverted)
             t = ocr_slice(pil_image, i)
-
+            if column == "A":
+                print(clean_stock_names(t))
             results["sections"][k]["rows"][row_index][column] = {
                 "text": clean_stock_names(t),
                 "is_redacted": find_redactions(pil_image),
@@ -295,12 +299,42 @@ def process_page(page, row_count, results, pg_count):
     return results
 
 
+def extract_now(results, k, row, row_index, columns, pg_count):
+    """
+
+    :param results:
+    :param k:
+    :param row:
+    :param row_index:
+    :param columns:
+    :param pg_count:
+    :return:
+    """
+
+    sema.acquire()
+    i = 0
+    results["sections"][k]["rows"][row_index] = {}
+    for item in row:
+        column = columns[i]
+        i += 1
+        color_coverted = cv2.cvtColor(item, cv2.COLOR_BGR2RGB)
+        pil_image = Image.fromarray(color_coverted)
+        t = ocr_slice(pil_image, i)
+        results["sections"][k]["rows"][row_index][column] = {
+            "text": clean_stock_names(t),
+            "is_redacted": find_redactions(pil_image),
+            "page_number": pg_count,
+        }
+        sema.release()
+    return results
+
+
 def extract_section_VII(
     # results: Dict[str : Union[str, list, int, float]],
     results: Dict,
     investment_pages: List,
     threaded: bool,
-    other_page_count: int,
+    pg_count: int,
 ):
     """
 
@@ -308,30 +342,28 @@ def extract_section_VII(
     :param investment_pages:
     :return:
     """
-    row_count = 0
-    pg_count = other_page_count
     threads = []
+    k = "Investments and Trusts"
+    columns = results["sections"]["Investments and Trusts"]["fields"]
+    row_index = 0
     for page in investment_pages:
         pg_count += 1
-        if threaded:
-            thread = threading.Thread(
-                target=process_page,
-                args=(
-                    page,
-                    row_count,
-                    results,
-                    pg_count,
-                ),
-            )
-            threads.append(thread)
-            thread.start()
-        else:
-            results = process_page(
-                page,
-                row_count,
-                results,
-                pg_count,
-            )
+        data = extract_page(page)
+        for row in data:
+            if len(row) > len(columns):
+                continue
+            if threaded:
+                thread = threading.Thread(
+                    target=extract_now,
+                    args=(results, k, row, row_index, columns, pg_count),
+                )
+                threads.append(thread)
+                thread.start()
+            else:
+                results = extract_now(
+                    results, k, row, row_index, columns, pg_count
+                )
+            row_index += 1
     for thread in threads:
         thread.join()
 
