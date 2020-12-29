@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import logging
 import re
 import threading
 from typing import Dict, List, Union
@@ -241,11 +242,12 @@ def process_row(row, page, results, k, row_count):
     """
     sema.acquire()
     ocr_key = 1
-    pg_num = None
+    page_number = None
+    sect = None
     for field, column in row.items():
-        if not pg_num:
+        if not page_number:
             page_number = int(column["page"]) + 1
-
+            sect = column["section"]
         crop = page.crop(column["coords"])
         if column["section"] == "Liabilities":
             ocr_key += 1
@@ -273,6 +275,7 @@ def process_row(row, page, results, k, row_count):
         results["sections"][k]["rows"][row_count][field] = data
 
     sema.release()
+    logging.info(f"Row in {sect} on pg {page_number} completed.")
     return results
 
 
@@ -291,7 +294,6 @@ def process_document(
     for k, v in results["sections"].items():
         threads = []
         for row_count, row in v["rows"].items():
-
             try:
                 page = pages[row[v["fields"][0]].get("page")]
                 if threaded:
