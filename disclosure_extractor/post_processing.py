@@ -100,20 +100,23 @@ def _fine_tune_results(
         if "ad" in d1["text"]:
             d1["text"] = "Buy (add'l)"
 
-        if d2 := inv[count]["D2"]["text"]:
+        d2 = inv[count]["D2"]["text"]
+        if d2:
             if re.match(r"\d{4}\/(\d{2}|\d{4})", d2):
                 d2 = f"{d2[:2]}/{d2[2:]}"
             elif re.match(r"(\d{2})\/\d{4}", d2):
                 d2 = f"{d2[:5]}/{d2[5:]}"
             inv[count]["D2"]["text"] = d2
 
-        if b2 := inv[count]["B2"]["text"]:
+        b2 = inv[count]["B2"]["text"]
+        if b2:
             if "lnt/" in b2:
                 inv[count]["B2"]["text"] = "Int/Div"
             if (
                 "D" == b2
                 or "y" == b2
-                or "Int/" == b2
+                or "v" == b2
+                or "Int/" in b2
                 or "Dy" in b2
                 or "iv" in b2
                 or "iy" in b2
