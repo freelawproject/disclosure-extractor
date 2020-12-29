@@ -238,9 +238,7 @@ def extract_section_I_to_VI(
     """
     page_is = None
     for k, v in results["sections"].items():
-        print(k)
         for x, row in v["rows"].items():
-            print(x)
             ocr_key = 1
             for y, column in row.items():
                 if page_is == None or page_is != column["page"]:
