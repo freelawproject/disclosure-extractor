@@ -125,9 +125,7 @@ def check_if_blank(cell_image: Image) -> bool:
     return False
 
 
-def ocr_slice(
-    image_crop: Image, column_index: int, field=None, section=None
-) -> str:
+def ocr_slice(image_crop: Image, column_index: int, field=None) -> str:
     """OCR cell based on column index
 
     Determine which function to use to OCR paticular column sections of
@@ -138,10 +136,18 @@ def ocr_slice(
     :return: text of cell.
     """
     if field == "Addendum":
-        return pytesseract.image_to_string(
+        addendum_raw = pytesseract.image_to_string(
             image_crop,
-            config="--psm 6 --oem 3 preserve_interword_spaces=1",
-        )
+            nice=0,
+            lang="eng",
+            config="--psm 11 --oem 3 preserve_interword_spaces=1",
+        ).strip("\x0c")
+        found_parts = re.compile(
+            r"(ADDITIONAL|(part of report)|EXPLANATIONS).*\n"
+        ).split(addendum_raw)
+        if len(found_parts) > 1:
+            return found_parts[-1].strip("\n")
+        return addendum_raw
 
     cleaned_image = clean_image(image_crop)
     if cleaned_image.size == 0:
@@ -207,25 +213,23 @@ def clean_stock_names(s):
         return s.strip()
 
 
-def process_addendum_normal(images, results):
-    # Process additional information
-    old_page_minus_2 = images[-2]
-    # old_page_minus_2 = pages[-2]
-    # page_minus_2 = old_page_minus_2.resize((1653, 2180))
-    # else:
-    page_minus_2 = old_page_minus_2
-    width, height = page_minus_2.size
-    slice = images[-2].crop(
-        (
-            0,
-            height * 0.15,
-            width,
-            height * 0.95,
-        )
-    )
+def process_addendum_normal(
+    images: List[Image.Image],
+    results: Dict[str, Union[str, int, float, List, Dict]],
+) -> Dict[str, Union[str, int, float, List, Dict]]:
+    """Process addendum normally
+
+    Crop the top and bottom from the addendum page and send it to process.
+
+    :param images: Page images
+    :param results: Extracted data
+    :return: Extract data with addendum content
+    """
+    w, h = images[-2].size
+    cropped_addendum_page = images[-2].crop((0, h * 0.1, w, h * 0.95))
     results["Additional Information or Explanations"] = {
-        "is_redacted": find_redactions(slice),
-        "text": ocr_slice(slice, 1, "Addendum"),
+        "is_redacted": find_redactions(cropped_addendum_page),
+        "text": ocr_slice(cropped_addendum_page, 1, "Addendum"),
     }
     return results
 

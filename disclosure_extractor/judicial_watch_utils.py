@@ -378,7 +378,7 @@ def process_addendum(addendum_page) -> Dict:
     slice = addendum_page.crop(
         (
             0,
-            height * 0.15,
+            height * 0.1,
             width,
             height * 0.95,
         )
