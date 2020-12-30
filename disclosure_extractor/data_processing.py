@@ -234,15 +234,21 @@ def process_addendum_normal(
     return results
 
 
-def process_row(row, page, results, k, row_count):
-    """Process indivdual row data
+def process_row(
+    row: Dict,
+    page: Image.Image,
+    results: Dict,
+    section_title: str,
+    row_count: int,
+) -> Dict:
+    """Process individual rows in a section with threading
 
-    :param row:
-    :param page:
-    :param results:
-    :param k:
-    :param row_count:
-    :return:
+    :param row: Row of page location data
+    :param page: The Page to OCR from
+    :param results: The current data extracted
+    :param section_title: The section the row belongs to
+    :param row_count: Row count
+    :return: Results with data added
     """
     sema.acquire()
     ocr_key = 1
@@ -256,16 +262,14 @@ def process_row(row, page, results, k, row_count):
         if column["section"] == "Liabilities":
             ocr_key += 1
             if ocr_key == 4:
-                text = ocr_slice(
-                    crop, ocr_key, field, column["section"]
-                ).strip()
+                text = ocr_slice(crop, ocr_key, field).strip()
             else:
-                text = ocr_slice(crop, 1, field, column["section"]).strip()
+                text = ocr_slice(crop, 1, field).strip()
         elif column["section"] == "Investments and Trusts":
-            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
+            text = ocr_slice(crop, ocr_key, field).strip()
             ocr_key += 1
         else:
-            text = ocr_slice(crop, ocr_key, field, column["section"]).strip()
+            text = ocr_slice(crop, ocr_key, field).strip()
 
         data = {}
         if column["section"] == "Investments and Trusts":
@@ -276,7 +280,7 @@ def process_row(row, page, results, k, row_count):
         data["is_redacted"] = find_redactions(crop)
         data["page_number"] = page_number
 
-        results["sections"][k]["rows"][row_count][field] = data
+        results["sections"][section_title]["rows"][row_count][field] = data
 
     sema.release()
     logging.info(f"Row in {sect} on pg {page_number} completed.")
@@ -315,7 +319,6 @@ def process_document(
                 pass
 
         for thread in threads:
-
             thread.join()
 
     # Process addendum
