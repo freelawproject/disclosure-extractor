@@ -88,7 +88,9 @@ def get_investment_pages(pdf_bytes):
         tmp.write(pdf_bytes)
 
         pg_count = PdfFileReader(tmp.name).numPages
-        pages = convert_from_path(tmp.name)
+        pages = convert_from_path(
+            tmp.name, thread_count=10, fmt="jpg", dpi=300
+        )
         if pg_count == "6":
             return pages[:3], pages[3:-2], pages[-2]
         cv_image = np.array(pages[3])
@@ -298,15 +300,15 @@ def process_page(page, row_count, results, pg_count):
 
 
 def extract_now(results, k, row, row_index, columns, pg_count):
-    """
+    """Extract from investments of judicial watch documents
 
-    :param results:
-    :param k:
-    :param row:
-    :param row_index:
-    :param columns:
-    :param pg_count:
-    :return:
+    :param results: Our current extraction results
+    :param k: The section
+    :param row: the Row we are extracting
+    :param row_index: the row count
+    :param columns: The available columns
+    :param pg_count: The page extraction is on
+    :return: Extracted content from row
     """
 
     sema.acquire()
@@ -318,6 +320,12 @@ def extract_now(results, k, row, row_index, columns, pg_count):
         color_coverted = cv2.cvtColor(item, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(color_coverted)
         t = ocr_slice(pil_image, i)
+        if "description" in t.lower() or "assets" in t.lower():
+            # If this is a bad PDF we may extract from the addendum.
+            # Check if we found it and move along.  Otherwise it could be
+            # Bleed over from one page
+            return results
+
         results["sections"][k]["rows"][row_index][column] = {
             "text": clean_stock_names(t),
             "is_redacted": find_redactions(pil_image),
@@ -333,8 +341,8 @@ def extract_section_VII(
     investment_pages: List,
     threaded: bool,
     pg_count: int,
-):
-    """
+) -> Dict:
+    """Extract content from investment pages on judicial watch documents
 
     :param results:
     :param investment_pages:
@@ -362,6 +370,11 @@ def extract_section_VII(
                     results, k, row, row_index, columns, pg_count
                 )
             row_index += 1
+        # Occasionally the judicial watch documents have multiple documents
+        # appended to them.  In this case, we stop processing after we
+        # no longer detect multiple rows to process
+        if len(data) < 5:
+            break
     for thread in threads:
         thread.join()
 
