@@ -406,6 +406,7 @@ def extract_page(page: Image) -> List[List]:
     _, _, processed_image = box_extraction(page)
 
     data = []
+    colors = set()
     first_key = None
     for row in processed_image:
         if first_key == None:
@@ -430,6 +431,7 @@ def extract_page(page: Image) -> List[List]:
                 current_x, last_x, last_x_hit = 0, 0, 0
                 for vertical_slice in vertical_slices:
                     current_x += 1
+                    colors.add(sum(vertical_slice))
                     if sum(vertical_slice) < 1000:
                         if abs(current_x - last_x) > 2:
                             if last_x_hit > 25:
@@ -447,4 +449,52 @@ def extract_page(page: Image) -> List[List]:
                     data.append(s8)
                 last_y_hit = current_y
             last_y = current_y
+
+    # Check with this xnumber
+    xnumber = sorted(list(colors))[30]
+    if len(data) < 5:
+        current_y, last_y, last_y_hit = 0, 0, 0
+        data = []
+        first_key = None
+        for row in processed_image:
+            if first_key == None:
+                first_key = sum(row)
+            current_y += 1
+
+            if ((float(sum(row)) / first_key)) * 100 < 25:
+                if abs(current_y - last_y) > 2:
+                    horizontal_slice = processed_image[
+                                       last_y_hit:current_y, 0:max_x
+                                       ]
+                    horizontal_slice = cv2.cvtColor(
+                        horizontal_slice, cv2.COLOR_GRAY2BGR
+                    )
+                    h, _, _ = horizontal_slice.shape
+                    vertical_slices = [
+                        horizontal_slice[:, x, y]
+                        for x in range(max_x)
+                        for y in range(1)
+                    ]
+                    s8 = []
+                    current_x, last_x, last_x_hit = 0, 0, 0
+                    for vertical_slice in vertical_slices:
+                        current_x += 1
+                        if sum(vertical_slice) < xnumber:
+                            if abs(current_x - last_x) > 2:
+                                if last_x_hit > 25:
+                                    s8.append(
+                                        open_cv_image[
+                                        last_y_hit:current_y,
+                                        last_x_hit:current_x,
+                                        ]
+                                    )
+                                last_x_hit = current_x
+                            last_x = current_x
+                    if len(s8) >= 10:
+                        if len(s8) == 11:
+                            s8 = s8[1:]
+                        data.append(s8)
+                    last_y_hit = current_y
+                last_y = current_y
+
     return data
