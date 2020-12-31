@@ -202,10 +202,13 @@ def process_judicial_watch(
         addendum_page,
     ) = get_investment_pages(pdf_bytes)
 
+    logging.info("Continuing")
+
     s1 = get_text_fields(non_investment_pages)
     document_data = identify_sections(s1)
     results = extract_section_I_to_VI(document_data, non_investment_pages)
 
+    logging.info("Processing Investments")
     # Process Section VII
     results = extract_section_VII(
         results, investment_pages, threaded, len(non_investment_pages)
