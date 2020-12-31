@@ -20,11 +20,11 @@ def _fine_tune_results(
         if k != "Investments and Trusts":
             for k1, v1 in v["rows"].items():
                 for k2, v2 in v1.items():
-                    if not v2['text']:
+                    if not v2["text"]:
                         remove_tuples.append((k, k1))
                         break
     for r in remove_tuples:
-        results['sections'][r[0]]['rows'].pop(r[1], None)
+        results["sections"][r[0]]["rows"].pop(r[1], None)
 
     # Reorganize results here
     for k, v in results["sections"].items():

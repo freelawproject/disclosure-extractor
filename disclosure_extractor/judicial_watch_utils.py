@@ -464,8 +464,8 @@ def extract_page(page: Image) -> List[List]:
             if ((float(sum(row)) / first_key)) * 100 < 25:
                 if abs(current_y - last_y) > 2:
                     horizontal_slice = processed_image[
-                                       last_y_hit:current_y, 0:max_x
-                                       ]
+                        last_y_hit:current_y, 0:max_x
+                    ]
                     horizontal_slice = cv2.cvtColor(
                         horizontal_slice, cv2.COLOR_GRAY2BGR
                     )
@@ -484,8 +484,8 @@ def extract_page(page: Image) -> List[List]:
                                 if last_x_hit > 25:
                                     s8.append(
                                         open_cv_image[
-                                        last_y_hit:current_y,
-                                        last_x_hit:current_x,
+                                            last_y_hit:current_y,
+                                            last_x_hit:current_x,
                                         ]
                                     )
                                 last_x_hit = current_x
