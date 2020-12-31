@@ -464,7 +464,10 @@ def extract_page(page: Image) -> List[List]:
             last_y = current_y
 
     # Check with this xnumber
-    xnumber = sorted(list(colors))[30]
+    if len(sorted(list(colors))) > 30:
+        xnumber = sorted(list(colors))[30]
+    else:
+        xnumber = sorted(list(colors))[-1]
     if len(data) < 5:
         current_y, last_y, last_y_hit = 0, 0, 0
         data = []
