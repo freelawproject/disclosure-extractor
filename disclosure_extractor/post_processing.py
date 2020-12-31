@@ -11,6 +11,22 @@ def _fine_tune_results(
     :param results: Raw data extracted by OCR
     :return: Refined data
     """
+
+    # Remove incomplete rows - and assume artifacts
+    # Find rows outside of investments that have missing data and
+    # remove them from the results
+    remove_tuples = []
+    for k, v in results["sections"].items():
+        if k != "Investments and Trusts":
+            for k1, v1 in v["rows"].items():
+                for k2, v2 in v1.items():
+                    if not v2['text']:
+                        remove_tuples.append((k, k1))
+                        break
+    for r in remove_tuples:
+        results['sections'][r[0]]['rows'].pop(r[1], None)
+
+    # Reorganize results here
     for k, v in results["sections"].items():
         del v["empty"]
         del v["order"]
