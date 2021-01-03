@@ -18,7 +18,7 @@ from disclosure_extractor.image_processing import (
     load_template,
 )
 
-sema = threading.Semaphore(value=10)
+sema = threading.Semaphore(value=20)
 
 
 def box_extraction(page):
@@ -88,9 +88,7 @@ def get_investment_pages(pdf_bytes):
         tmp.write(pdf_bytes)
 
         pg_count = PdfFileReader(tmp.name).numPages
-        pages = convert_from_path(
-            tmp.name, thread_count=10, fmt="jpg", dpi=300
-        )
+        pages = convert_from_path(tmp.name)
         if pg_count == "6":
             return pages[:3], pages[3:-2], pages[-2]
         cv_image = np.array(pages[3])
@@ -345,6 +343,7 @@ def extract_section_VII(
     :param investment_pages:
     :return:
     """
+    last_data = None
     threads = []
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
@@ -370,8 +369,11 @@ def extract_section_VII(
         # Occasionally the judicial watch documents have multiple documents
         # appended to them.  In this case, we stop processing after we
         # no longer detect multiple rows to process
-        if len(data) < 5:
-            break
+        if last_data is None:
+            last_data = len(data)
+        else:
+            if last_data < 5:
+                break
     for thread in threads:
         thread.join()
 
@@ -460,6 +462,8 @@ def extract_page(page: Image) -> List[List]:
                 last_y_hit = current_y
             last_y = current_y
 
+    if not list(colors):
+        return data
     # Check with this xnumber
     if len(sorted(list(colors))) > 30:
         xnumber = sorted(list(colors))[30]
