@@ -207,9 +207,6 @@ def identify_sections(s1):
                 (group["x"] + group["w"]),
                 (group["y"] + group["h"]),
             )
-            # print(results["sections"][sect]["fields"], col_indx)
-            if len(results["sections"][sect_name]["fields"]) > col_indx:
-                continue
             try:
                 column = results["sections"][sect_name]["fields"][col_indx]
 
@@ -221,8 +218,8 @@ def identify_sections(s1):
                     "section"
                 ] = sect_name
                 col_indx += 1
-            except Exception as e:
-                print(str(e))
+            except IndexError:
+                # Remove incomplete rows here
                 pass
         row_index += 1
     return results
