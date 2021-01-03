@@ -74,8 +74,10 @@ def _fine_tune_results(
 
                 # Dates - sometimes get addendum a numerical count
                 # (12011 -> 2011; 2.2011 -> 2011)
-                year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))" \
-                                     r"|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
+                year_cleanup_regex = (
+                    r"^(1(?P<year1>(20)(0|1)[0-9]))"
+                    r"|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
+                )
                 m = re.match(year_cleanup_regex, field["text"])
                 if m:
                     if m.group("year1"):
