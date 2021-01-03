@@ -1,6 +1,9 @@
 import json
 import re
 from typing import Dict, Union, List
+from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
+from numpy import median
 
 
 def _fine_tune_results(
@@ -17,12 +20,11 @@ def _fine_tune_results(
     # remove them from the results
     remove_tuples = []
     for k, v in results["sections"].items():
-        if k != "Investments and Trusts":
+        if k == "Investments and Trusts":
             for k1, v1 in v["rows"].items():
-                for k2, v2 in v1.items():
-                    if not v2["text"]:
-                        remove_tuples.append((k, k1))
-                        break
+                if len(v["fields"]) != len(v1.keys()):
+                    remove_tuples.append((k, k1))
+
     for r in remove_tuples:
         results["sections"][r[0]]["rows"].pop(r[1], None)
 
@@ -70,8 +72,10 @@ def _fine_tune_results(
                         field["text"][0].upper() + field["text"][1:]
                     )
 
-                # Dates - sometimes get addneded a numerical count  (12011 -> 2011; 2.2011 -> 2011)
-                year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
+                # Dates - sometimes get addendum a numerical count
+                # (12011 -> 2011; 2.2011 -> 2011)
+                year_cleanup_regex = r"^(1(?P<year1>(20)(0|1)[0-9]))" \
+                                     r"|([1-5]\.(?P<year2>(20)(0|1)[0-9]))"
                 m = re.match(year_cleanup_regex, field["text"])
                 if m:
                     if m.group("year1"):
@@ -142,5 +146,43 @@ def _fine_tune_results(
                 inv[count]["B2"]["text"] = "Int/Div"
 
         count += 1
+
+    # Clean up any incomplete rows or rows containing no english
+
+    for title, sect in results["sections"].items():
+        to_remove = set()
+        fields = sect["fields"]
+        if title != "Investments and Trusts":
+            count = 0
+            for row in sect["rows"]:
+                languages = []
+
+                if len(fields) == len(row.keys()):
+
+                    row_text = [row[field]["text"] for field in fields]
+                    lengths = [len(r) for r in row_text]
+                    if 0 in lengths:
+                        for x in row_text:
+                            if x != "":
+                                m = median([len(l) for l in x.split(" ")])
+                                if m < 2:
+                                    to_remove.add(count)
+
+                    for field in fields:
+                        if row[field]["is_redacted"]:
+                            languages.append("en")
+                            continue
+                        try:
+                            languages.append(detect(row[field]["text"]))
+                        except LangDetectException:
+                            languages.append("")
+
+                    if "en" not in languages:
+                        to_remove.add(count)
+                else:
+                    to_remove.add(count)
+                count += 1
+        for i in sorted(list(to_remove))[::-1]:
+            results["sections"][title]["rows"].pop(i)
 
     return json.loads(json.dumps(results).replace("\\u2022", "-1"))
