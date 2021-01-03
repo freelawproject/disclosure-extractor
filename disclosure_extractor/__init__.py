@@ -92,7 +92,11 @@ def display_wealth(results: Dict[str, str]) -> None:
 
 
 def display_table(results: Dict) -> None:
-    """Display results in nice neat tables"""
+    """Display results in nice neat tables
+
+    :param results: Results from extraction
+    :return: None
+    """
     for title, sect in results["sections"].items():
         print(title)
         fields = sect["fields"]
