@@ -195,7 +195,7 @@ def process_judicial_watch(
         pdf_bytes = requests.get(url, stream=True).content
 
     # Turn the PDF into an array of images
-    pages = convert_from_bytes(pdf_bytes, thread_count=10)
+    pages = convert_from_bytes(pdf_bytes, thread_count=10, fmt="jpg", dpi=300)
     page_total = len(pages)
     logging.info("Document is %s pages long" % page_total)
 
