@@ -204,9 +204,7 @@ def process_judicial_watch(
         non_investment_pages,
         investment_pages,
         addendum_page,
-    ) = get_investment_pages(pdf_bytes)
-
-    logging.info("Continuing")
+    ) = get_investment_pages(pages)
 
     s1 = get_text_fields(non_investment_pages)
     document_data = identify_sections(s1)

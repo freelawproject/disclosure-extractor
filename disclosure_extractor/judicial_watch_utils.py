@@ -77,27 +77,25 @@ def box_extraction(page):
     return contours, hierarchy, img_final_bin
 
 
-def get_investment_pages(pdf_bytes):
+def get_investment_pages(
+    pages: List[Image.Image],
+):
+    """Guess which pages are our pages
+
+    :param pages: List of pages as images
+    :return: Tuple of pages
     """
 
-    :param pdf_bytes:
-    :return:
-    """
-
-    with tempfile.NamedTemporaryFile() as tmp:
-        tmp.write(pdf_bytes)
-
-        pg_count = PdfFileReader(tmp.name).numPages
-        pages = convert_from_path(tmp.name)
-        if pg_count == "6":
-            return pages[:3], pages[3:-2], pages[-2]
-        cv_image = np.array(pages[3])
-        avg_color_per_row = np.average(cv_image, axis=0)
-        avg_color = np.average(avg_color_per_row, axis=0)
-        if avg_color[0] > 245:
-            return pages[:4], pages[4:-2], pages[-2]
-        else:
-            return pages[:3], pages[3:-2], pages[-2]
+    pg_count = len(pages)
+    if pg_count == "6":
+        return pages[:3], pages[3:-2], pages[-2]
+    cv_image = np.array(pages[3])
+    avg_color_per_row = np.average(cv_image, axis=0)
+    avg_color = np.average(avg_color_per_row, axis=0)
+    if avg_color[0] > 245:
+        return pages[:4], pages[4:-2], pages[-2]
+    else:
+        return pages[:3], pages[3:-2], pages[-2]
 
 
 def get_text_fields(non_investment_pages):
