@@ -343,7 +343,6 @@ def extract_section_VII(
     :param investment_pages:
     :return:
     """
-    last_data = None
     threads = []
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
@@ -369,14 +368,9 @@ def extract_section_VII(
         # Occasionally the judicial watch documents have multiple documents
         # appended to them.  In this case, we stop processing after we
         # no longer detect multiple rows to process
-        if last_data is None:
-            last_data = len(data)
-        else:
-            if last_data < 5:
-                break
+        logging.info(f"Processing page {pg_count}")
     for thread in threads:
         thread.join()
-
     return results
 
 
