@@ -3,7 +3,6 @@
 import collections
 import logging
 import re
-import threading
 from typing import Dict, List, Union
 
 import pytesseract
@@ -11,8 +10,6 @@ from PIL import Image, ImageEnhance
 
 from disclosure_extractor.image_processing import clean_image
 from disclosure_extractor.image_processing import find_redactions
-
-sema = threading.Semaphore(value=10)
 
 
 def ocr_page(image: Image) -> str:
@@ -250,7 +247,6 @@ def process_row(
     :param row_count: Row count
     :return: Results with data added
     """
-    sema.acquire()
     ocr_key = 1
     page_number = None
     sect = None
@@ -282,7 +278,6 @@ def process_row(
 
         results["sections"][section_title]["rows"][row_count][field] = data
 
-    sema.release()
     logging.info(f"Row in {sect} on pg {page_number} completed.")
     return results
 
@@ -290,7 +285,6 @@ def process_row(
 def process_document(
     results: Dict[str, Union[str, int, float, List, Dict]],
     pages: List,
-    threaded: bool,
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
     """Iterate over parsed document location data
 
@@ -300,26 +294,13 @@ def process_document(
     :return: OCR'd data
     """
     for k, v in results["sections"].items():
-        threads = []
         for row_count, row in v["rows"].items():
             try:
                 page = pages[row[v["fields"][0]].get("page")]
-                if threaded:
-                    thread = threading.Thread(
-                        target=process_row,
-                        args=(row, page, results, k, row_count),
-                    )
-                    threads.append(thread)
-                    thread.setDaemon(True)
-                    thread.start()
-                else:
-                    results = process_row(row, page, results, k, row_count)
+                results = process_row(row, page, results, k, row_count)
             except Exception as e:
                 # Field doesnt exist for row
                 pass
-
-        for thread in threads:
-            thread.join()
 
     # Process addendum
     results = process_addendum_normal(pages, results)

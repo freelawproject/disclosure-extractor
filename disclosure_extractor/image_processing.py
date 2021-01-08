@@ -2,7 +2,6 @@
 
 import json
 import logging
-import threading
 from itertools import groupby
 from typing import Dict, Union, List
 
@@ -16,8 +15,6 @@ try:
 except ImportError:
     # In PY<3.7 fall-back to backported `importlib_resources`.
     import importlib_resources
-
-sema = threading.Semaphore(value=10)
 
 
 def clahe(img, clip_limit=1.0, grid_size=(8, 8)):
@@ -69,7 +66,6 @@ def process_contours_page(
 ) -> Dict[str, Union[str, int, float, List, Dict]]:
 
     # Add to queue
-    sema.acquire()
 
     mode = cv2.RETR_CCOMP
     method = cv2.CHAIN_APPROX_SIMPLE
@@ -223,7 +219,6 @@ def process_contours_page(
         results["final"] = True if final[4] < 220 else False
 
     # Release from queue
-    sema.release()
     logging.info("Page contours extracted")
     return results
 
@@ -378,7 +373,7 @@ def group_other_sections(s1):
     return other_sections
 
 
-def extract_contours_from_page(pages: List[Image], try_again, threaded):
+def extract_contours_from_page(pages: List[Image], try_again):
     """Process PDF
 
     Return the document structure as JSON data to easily and accurately
@@ -388,49 +383,21 @@ def extract_contours_from_page(pages: List[Image], try_again, threaded):
     check = {}
     checkboxes, s0, s1, s7 = [], [], [], []
     little_checkboxes = []
-    threads = []
     pg_num = 0
-    if threaded:
-        start_at = 3
-    else:
-        start_at = len(pages)
     for page in pages:
-        if pg_num < start_at:
-            results = process_contours_page(
-                page,
-                results,
-                pg_num,
-                checkboxes,
-                check,
-                s0,
-                s7,
-                little_checkboxes,
-                s1,
-                try_again,
-            )
-        else:
-            thread = threading.Thread(
-                target=process_contours_page,
-                args=(
-                    page,
-                    results,
-                    pg_num,
-                    checkboxes,
-                    check,
-                    s0,
-                    s7,
-                    little_checkboxes,
-                    s1,
-                    try_again,
-                ),
-            )
-            threads.append(thread)
-            thread.setDaemon(True)
-            thread.start()
+        results = process_contours_page(
+            page,
+            results,
+            pg_num,
+            checkboxes,
+            check,
+            s0,
+            s7,
+            little_checkboxes,
+            s1,
+            try_again,
+        )
         pg_num += 1
-
-    for thread in threads:
-        thread.join()
 
     # Here is where we do some data processing and group rows together
     # sometimes things need to be massaged a bit.

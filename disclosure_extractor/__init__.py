@@ -170,7 +170,7 @@ def process_financial_document(
 
 
 def process_judicial_watch(
-    file_path=None, url=None, pdf_bytes=None, show_logs=None, threaded=False
+    file_path=None, url=None, pdf_bytes=None, show_logs=None
 ):
     """This is the second and more brute force method for ugly PDFs.
 
@@ -213,7 +213,7 @@ def process_judicial_watch(
     logging.info("Processing Investments")
     # Process Section VII
     results = extract_section_VII(
-        results, investment_pages, threaded, len(non_investment_pages)
+        results, investment_pages, len(non_investment_pages)
     )
 
     # Process Section VIII - Addendum
@@ -239,7 +239,6 @@ def extract_financial_document(
     pdf_bytes: bytes = None,
     show_logs: bool = False,
     resize: bool = False,
-    threaded: bool = False,
 ) -> Dict:
     """Extract documents with lowered memory footprint
 
@@ -270,10 +269,10 @@ def extract_financial_document(
             pg = page.resize((1653, 2180))
             pages.append(pg)
 
-    document_structure = extract_contours_from_page(pages, False, threaded)
+    document_structure = extract_contours_from_page(pages, False)
 
     if document_structure["found_count"] < 8:
-        document_structure = extract_contours_from_page(pages, True, threaded)
+        document_structure = extract_contours_from_page(pages, True)
         # print(document_structure["found_count"])
         if document_structure["found_count"] < 8:
 
@@ -287,7 +286,7 @@ def extract_financial_document(
             }
 
     logging.info("Extracting content from financial disclosure")
-    results = process_document(document_structure, pages, threaded)
+    results = process_document(document_structure, pages)
     results["page_count"] = len(pages)
 
     results["pdf_size"] = ""

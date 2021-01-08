@@ -1,7 +1,5 @@
 import json
 import logging
-import tempfile
-import threading
 from itertools import groupby
 from typing import Dict, List, Union
 
@@ -9,16 +7,12 @@ import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
-from PyPDF2 import PdfFileReader
-from pdf2image import convert_from_path
 
 from disclosure_extractor.data_processing import ocr_slice, clean_stock_names
 from disclosure_extractor.image_processing import (
     find_redactions,
     load_template,
 )
-
-sema = threading.Semaphore(value=20)
 
 
 def box_extraction(page):
@@ -260,7 +254,6 @@ def extract_section_I_to_VI(
 
 # Deprecated and replaced leaving for now.
 def process_page(page, row_count, results, pg_count):
-    sema.acquire()
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
     logging.info(f"Extracting Investment Page #{pg_count}")
@@ -288,7 +281,6 @@ def process_page(page, row_count, results, pg_count):
         row_count += 1
 
     print(f"Page #{pg_count} finished.")
-    sema.release()
     return results
 
 
@@ -304,7 +296,6 @@ def extract_now(results, k, row, row_index, columns, pg_count):
     :return: Extracted content from row
     """
 
-    sema.acquire()
     i = 0
     results["sections"][k]["rows"][row_index] = {}
     for item in row:
@@ -324,7 +315,6 @@ def extract_now(results, k, row, row_index, columns, pg_count):
             "is_redacted": find_redactions(pil_image),
             "page_number": pg_count,
         }
-        sema.release()
     return results
 
 
@@ -332,7 +322,6 @@ def extract_section_VII(
     # results: Dict[str : Union[str, list, int, float]],
     results: Dict,
     investment_pages: List,
-    threaded: bool,
     pg_count: int,
 ) -> Dict:
     """Extract content from investment pages on judicial watch documents
@@ -341,7 +330,6 @@ def extract_section_VII(
     :param investment_pages:
     :return:
     """
-    threads = []
     k = "Investments and Trusts"
     columns = results["sections"]["Investments and Trusts"]["fields"]
     row_index = 0
@@ -351,24 +339,14 @@ def extract_section_VII(
         for row in data:
             if len(row) > len(columns):
                 continue
-            if threaded:
-                thread = threading.Thread(
-                    target=extract_now,
-                    args=(results, k, row, row_index, columns, pg_count),
-                )
-                threads.append(thread)
-                thread.start()
-            else:
-                results = extract_now(
-                    results, k, row, row_index, columns, pg_count
-                )
+            results = extract_now(
+                results, k, row, row_index, columns, pg_count
+            )
             row_index += 1
         # Occasionally the judicial watch documents have multiple documents
         # appended to them.  In this case, we stop processing after we
         # no longer detect multiple rows to process
         logging.info(f"Processing page {pg_count}")
-    for thread in threads:
-        thread.join()
     return results
 
 
