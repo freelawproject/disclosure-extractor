@@ -27,7 +27,7 @@ def estimate_investment_net_worth(results):
         "G": [100001, 1000000],
         "H1": [1000001, 5000000],
         "H2": [  # This is inaccurate as their is no upper bound
-            5000000,
+            5000001,
             1000000000,
         ],
         "J": [1, 15000],
