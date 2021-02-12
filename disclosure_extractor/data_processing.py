@@ -49,7 +49,7 @@ def ocr_variables(slice: Image, column: int) -> str:
     :return: return cell OCR value
     """
     if column == 2 or column == 9:
-        possibilities = ["A", "B", "C", "D", "E", "F", "G", "H"]
+        possibilities = ["A", "B", "C", "D", "E", "F", "G", "H1", "H2"]
     elif column == 5:
         possibilities = ["Q", "R", "S", "T", "U", "V", "W"]
     else:
