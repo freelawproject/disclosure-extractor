@@ -6,7 +6,7 @@ importlib.resources
 langdetect
 numpy
 olefile==0.46
-opencv-python==4.2.0.32
+opencv-python
 pandas
 pathlib
 pdf2image
