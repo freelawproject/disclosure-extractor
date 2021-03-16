@@ -5,8 +5,11 @@ from typing import Tuple
 import pdfplumber
 
 from disclosure_extractor.image_processing import load_template
-from disclosure_extractor.jef.utils import (crop_and_extract, get_lines,
-                                            set_section)
+from disclosure_extractor.jef.utils import (
+    crop_and_extract,
+    get_lines,
+    set_section,
+)
 
 VALUATION_METHODS = (
     ("Q", "Appraisal"),
