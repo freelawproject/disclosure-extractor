@@ -20,6 +20,7 @@ from disclosure_extractor.image_processing import (
     extract_contours_from_page,
     CheckboxesNotFound,
 )
+from disclosure_extractor.jef.extraction import extract_content
 from disclosure_extractor.judicial_watch_utils import (
     get_investment_pages,
     extract_section_VII,
@@ -298,3 +299,16 @@ def extract_financial_document(
     cleaned_data = _fine_tune_results(results)
 
     return cleaned_data
+
+
+def process_jef_document(
+    file_path: str = None,
+    show_logs: bool = False,
+) -> Dict:
+    print("")
+    if show_logs:
+        logging.getLogger().setLevel(logging.INFO)
+    logging.info("Starting pdf to image conversion")
+    cd = extract_content(file_path)
+
+    return cd

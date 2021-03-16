@@ -10,6 +10,7 @@ opencv-python
 pandas
 pathlib
 pdf2image
+pdfplumber
 Pillow
 prettytable
 pycryptodome==3.9.8
