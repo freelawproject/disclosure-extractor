@@ -341,6 +341,14 @@ The main sections are as follows.
 9. :code:`Additional Information or Explanations` ==> dict;
 
 
+Known Limitations
+=================
+
+This code was developed for financial disclosures released after
+2007ish.  In older documents reimbursements was consolidated into
+only two fields from the current five.  This causes data to be
+incorrectly identified by sections.
+
 Installation
 ============
 
