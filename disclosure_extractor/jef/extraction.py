@@ -1,15 +1,12 @@
 import os
 import re
-from typing import Tuple
+from typing import Dict, Tuple
 
 import pdfplumber
 
 from disclosure_extractor.image_processing import load_template
-from disclosure_extractor.jef.utils import (
-    crop_and_extract,
-    get_lines,
-    set_section,
-)
+from disclosure_extractor.jef.utils import (crop_and_extract, get_lines,
+                                            set_section)
 
 VALUATION_METHODS = (
     ("Q", "Appraisal"),
@@ -18,9 +15,9 @@ VALUATION_METHODS = (
     ("T", "Cash Market"),
     ("U", "Book Value"),
     ("V", "Other"),
+    ("W", "Estimated"),
 )
 
-# INCOME GAIN CODES
 INCOME_GAIN = (
     ("A", "1 - 1,000"),
     ("B", "1,001 - 2,500"),
@@ -48,9 +45,11 @@ GROSS_VALUE = (
 
 
 def get_comment(content) -> str:
-    """Check if comments are found on the first page, and return them
+    """Check if comments are found on the first page - this is a new comment
 
-    :param page:
+    This new general comment is appended to the additional comments section.
+
+    :param content:
     :return:
     """
     if "COMMENT" in content:
@@ -75,11 +74,19 @@ def get_metadata(cd, content) -> Tuple:
 
 
 def convert_gross_value(datum):
-    if datum and datum != "None":
+    """Convert gross values to code for gross values
+
+    :param datum:
+    :return:
+    """
+    if datum == None or datum == "None":
+        return ""
+
+    if datum:
         if "less" in datum:
             return "J"
         min_val = datum.split(" ")[0]
-        h = re.sub("[^\d,]", "", min_val)
+        h = re.sub(r"[^\d,]", "", min_val)
         for k, v in GROSS_VALUE:
             if v.split(" ")[0] == h:
                 return k
@@ -87,32 +94,56 @@ def convert_gross_value(datum):
 
 
 def convert_valuation_method(datum):
-    if datum and datum != "None":
-        if "less" in datum:
-            return "J"
-        min_val = datum.split(" ")[0]
-        h = re.sub("[^\d,]", "", min_val)
+    """Convert values to code for Valuation method
+
+    :param datum:
+    :return:
+    """
+    if datum == None or datum == "None":
+        return ""
+
+    if datum:
         for k, v in VALUATION_METHODS:
-            if v.split(" ")[0] == h:
+            if v == datum:
                 return k
     return datum
 
 
 def convert_income_gain(datum):
-    if datum and datum != "None":
+    """Convert values to code for income gains
+
+    :param datum:
+    :return:
+    """
+    if datum == None or datum == "None":
+        return ""
+
+    if datum:
         if datum == "$1,000 or less":
             return "A"
         min_val = datum.split(" ")[0]
-        h = re.sub("[^\d,]", "", min_val)
+        h = re.sub(r"[^\d,]", "", min_val)
         for k, v in INCOME_GAIN:
             if v.split(" ")[0] == h:
                 return k
     return datum
 
 
-def add_data(cd, title, data, pg_number):
-    if not cd["sections"][title]["rows"]:
-        cd["sections"][title]["rows"] = []
+def add_data(results: Dict, title: str, data: Dict, pg_number: int) -> Dict:
+    """Normalize and combine data into results
+
+    :param results: All extracted content
+    :param title: Section title
+    :param data: Row data to append to results
+    :param pg_number: page number
+    :return: Results with appended data row
+    """
+    for k, v in data.items():
+        if v == "None" or v == None:
+            data[k] = ""
+
+    if not results["sections"][title]["rows"]:
+        results["sections"][title]["rows"] = []
 
     if title == "Positions":
         r = {
@@ -201,7 +232,7 @@ def add_data(cd, title, data, pg_number):
         }
     elif title == "Gifts":
         r = {
-            "Soruce": {
+            "Source": {
                 "is_redacted": data["is_redacted"],
                 "page_number": pg_number,
                 "text": data["SOURCE"],
@@ -232,7 +263,7 @@ def add_data(cd, title, data, pg_number):
             "Value Code": {
                 "is_redacted": data["is_redacted"],
                 "page_number": pg_number,
-                "text": data["VALUE"],
+                "text": convert_gross_value(data["VALUE"]),
             },
         }
     elif title == "Investments and Trusts":
@@ -289,17 +320,21 @@ def add_data(cd, title, data, pg_number):
             },
         }
     else:
-        return cd
+        return results
 
-    cd["sections"][title]["rows"].append(r)
-    return cd
-
-
-# files = glob.glob("assets/*.pdf")
-# for file in files:
+    results["sections"][title]["rows"].append(r)
+    return results
 
 
-def extract_content(filepath):
+def extract_content(filepath: str) -> Dict:
+    """Extract content from JEF financial disclosures.
+
+    This functions works on a new type of document from the AO
+
+    :param filepath: Path to the PDF
+    :return: Extracted content
+    :type: dict
+    """
     with pdfplumber.open(filepath) as pdf:
         print(filepath)
         page_one = pdf.pages[0].extract_text()
@@ -310,6 +345,7 @@ def extract_content(filepath):
         yet = False
         cd["general_comment"] = get_comment(page_one)
         cd["pdf_size"] = os.path.getsize(filepath)
+        cd["page_count"] = len(pdf.pages)
 
         for page in pdf.pages:
             lines, keys = get_lines(page)
@@ -318,13 +354,11 @@ def extract_content(filepath):
 
             for line in sorted(lines, key=lambda x: x["top"]):
                 if line["width"] == 600:
-                    # SET SECTION TITLE HERE
                     bbox = crop_and_extract(
                         page, line, up_shift=25, adjust=False, keys=keys
                     )
                     output = page.crop(bbox=bbox).extract_text()
                     options, title = set_section(output)
-
                     row = []
                 else:
                     bbox = crop_and_extract(
@@ -344,6 +378,8 @@ def extract_content(filepath):
                         yet = True
                     if not yet:
                         continue
+                    if output == None:
+                        output = ""
                     row.append(output)
                     if row == ["None"]:
                         cd["sections"][title]["empty"] = True
@@ -351,7 +387,6 @@ def extract_content(filepath):
                         if "#" in row or "DESCRIPTION" in row:
                             row = []
                             continue
-
                         data = dict(zip(options, row))
                         data["is_redacted"] = redacted
                         if title == "Additional Information or Explanations":

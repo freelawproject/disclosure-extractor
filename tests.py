@@ -11,9 +11,10 @@ import unittest
 from unittest import TestCase
 
 from disclosure_extractor import (
-    process_judicial_watch,
     display_table,
     extract_financial_document,
+    process_jef_document,
+    process_judicial_watch,
 )
 
 
@@ -48,6 +49,37 @@ class DisclosureTests(TestCase):
         )
         self.assertTrue(results["success"], msg="Process failed")
         display_table(results)
+
+    def test_JEF_style_extraction(self):
+        """Test if we can process a JEF processed PDF?"""
+        pdf_path = os.path.join(self.assets_dir, "Lucero-C-J3.pdf")
+        results = process_jef_document(
+            file_path=pdf_path, calculate_wealth=True
+        )
+        self.assertTrue(results["success"], msg="Process failed")
+        self.assertEqual(
+            len(results["sections"]["Positions"]["rows"]),
+            1,
+            msg="Positions failed",
+        )
+        self.assertEqual(
+            len(results["sections"]["Agreements"]["rows"]),
+            0,
+            msg="Agreements failed",
+        )
+        self.assertEqual(
+            len(results["sections"]["Investments and Trusts"]["rows"]),
+            84,
+            msg="Investments failed",
+        )
+        self.assertEqual(
+            results["sections"]["Investments and Trusts"]["rows"][0]["A"][
+                "text"
+            ],
+            "Commercial Building, Alamosa County, CO",
+            msg="Wrong investment",
+        )
+
 
 
 if __name__ == "__main__":
