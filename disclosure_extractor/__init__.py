@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 
 import logging
 from typing import Dict
@@ -10,19 +14,25 @@ import requests
 from pdf2image import convert_from_bytes, convert_from_path
 from prettytable import PrettyTable
 
-from disclosure_extractor.calculate import (color,
-                                            estimate_investment_net_worth,
-                                            estimate_investment_net_worth_JEF)
+from disclosure_extractor.calculate import (
+    color,
+    estimate_investment_net_worth,
+    estimate_investment_net_worth_JEF,
+)
 from disclosure_extractor.data_processing import process_document
-from disclosure_extractor.image_processing import (CheckboxesNotFound,
-                                                   extract_contours_from_page)
+from disclosure_extractor.image_processing import (
+    CheckboxesNotFound,
+    extract_contours_from_page,
+)
 from disclosure_extractor.jef.extraction import extract_content
-from disclosure_extractor.judicial_watch_utils import (extract_section_I_to_VI,
-                                                       extract_section_VII,
-                                                       get_investment_pages,
-                                                       get_text_fields,
-                                                       identify_sections,
-                                                       process_addendum)
+from disclosure_extractor.judicial_watch_utils import (
+    extract_section_I_to_VI,
+    extract_section_VII,
+    get_investment_pages,
+    get_text_fields,
+    identify_sections,
+    process_addendum,
+)
 from disclosure_extractor.post_processing import _fine_tune_results
 
 
