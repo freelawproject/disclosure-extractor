@@ -275,6 +275,7 @@ def add_data(results: Dict, title: str, data: Dict, pg_number: int) -> Dict:
                 "is_redacted": data["is_redacted"],
                 "page_number": pg_number,
                 "text": data["DESCRIPTION"],
+                "inferred_value": False,
             },
             "B1": {
                 "is_redacted": data["is_redacted"],
@@ -346,6 +347,7 @@ def extract_content(filepath: str) -> Dict:
         cd = get_metadata(cd, page_one)
 
         yet = False
+        addendum_redacted = False
         cd["general_comment"] = get_comment(page_one)
         cd["pdf_size"] = os.path.getsize(filepath)
         cd["page_count"] = len(pdf.pages)
@@ -396,10 +398,15 @@ def extract_content(filepath: str) -> Dict:
                             cd[
                                 "general_comment"
                             ] = f'{cd["general_comment"]} PART {data["PART"]} #{data["#"]} {data["NOTE"]}'
+                            if not redacted and data["is_redacted"]:
+                                addendum_redacted = True
                             continue
                         cd["sections"][title]["empty"] = False
                         cd = add_data(cd, title, data, page.page_number)
                         row = []
                         redacted = False
-        cd["Additional Information or Explanations"] = cd["general_comment"]
+        cd["Additional Information or Explanations"] = {
+            "text": cd["general_comment"],
+            "is_redacted": addendum_redacted,
+        }
         return cd

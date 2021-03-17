@@ -79,6 +79,15 @@ class DisclosureTests(TestCase):
             "Commercial Building, Alamosa County, CO",
             msg="Wrong investment",
         )
+        self.assertEqual(
+            results["Additional Information or Explanations"]["text"],
+            """1) Line 5 - Land was purchased on January 1, 2013 for $50,174 from the estate of Maria Medina, property was subject to mortgage (part VI, line 1) that was paid-in-full during 2018. PART VII. #1 Estimated value based on comparative sales.""",
+            msg="Addendum incorrect",
+        )
+        self.assertFalse(
+            results["Additional Information or Explanations"]["is_redacted"],
+            msg="Addendum redaction incorrect",
+        )
 
 
 if __name__ == "__main__":
