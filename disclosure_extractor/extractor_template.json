@@ -2,7 +2,7 @@
 	"title": "Document title",
 	"url": "Document download url if applicable",
 	"type": "PDF",
-	"page_count": 9,
+	"page_count": 0,
 	"sections": {
 		"Positions": {
       "order": 1,
