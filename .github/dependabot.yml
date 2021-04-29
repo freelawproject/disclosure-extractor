@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "13:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: argcomplete
+    versions:
+    - 1.12.2
+  - dependency-name: urllib3
+    versions:
+    - 1.26.3
