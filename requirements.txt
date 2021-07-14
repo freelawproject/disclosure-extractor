@@ -17,7 +17,7 @@ pycryptodome==3.9.8
 PyPDF2
 pytesseract==0.3.5
 pytest
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 requests
 six
 sortedcontainers==2.2.2
