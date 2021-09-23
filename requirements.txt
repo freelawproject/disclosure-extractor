@@ -21,4 +21,4 @@ python-dateutil==2.8.1
 requests
 six
 sortedcontainers==2.2.2
-urllib3==1.25.10
+urllib3==1.26.7
