@@ -13,7 +13,7 @@ pdf2image
 pdfplumber
 Pillow
 prettytable
-pycryptodome==3.9.8
+pycryptodome==3.11.0
 PyPDF2
 pytesseract==0.3.5
 pytest
