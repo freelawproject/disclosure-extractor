@@ -104,7 +104,9 @@ class ExtractNormalPDF(TestCase):
         results = extract_vector_pdf(pdf_path)
         self.assertTrue(results["success"], msg="Extraction Failed")
         self.assertEqual(
-            results["sections"]["Investments and Trusts"]["rows"][43]["A"]['text'],
+            results["sections"]["Investments and Trusts"]["rows"][43]["A"][
+                "text"
+            ],
             "BLACKROCK STRATEGIC INCOME OPPTYS INSTL CL REINVESTMENTS BSIIX",
             msg="Wrong Company Name",
         )

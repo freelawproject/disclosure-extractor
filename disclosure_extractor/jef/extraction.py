@@ -5,8 +5,12 @@ from typing import Dict, Tuple
 import pdfplumber
 
 from disclosure_extractor.image_processing import load_template
-from disclosure_extractor.jef.filters import filter_bold_times, title_text, \
-    title_text_V, title_text_reverse
+from disclosure_extractor.jef.filters import (
+    filter_bold_times,
+    title_text,
+    title_text_V,
+    title_text_reverse,
+)
 from disclosure_extractor.jef.utils import (
     crop_and_extract,
     get_lines,
@@ -468,7 +472,10 @@ def extract_normal_pdf(filepath: str) -> Dict:
         pages = pdf.pages
         for page in pages:
             if not page.extract_text() or len(page.extract_text()) < 100:
-                return {"success": False, "msg": f"OCR required on page #{page.page_number}"}
+                return {
+                    "success": False,
+                    "msg": f"OCR required on page #{page.page_number}",
+                }
 
         for page in pages:
             for table in page.debug_tablefinder().tables:
@@ -499,24 +506,24 @@ def extract_normal_pdf(filepath: str) -> Dict:
 
         addendum = ""
         for page in pages:
-            text = page.filter(
-                title_text).extract_text()
+            text = page.filter(title_text).extract_text()
             if not text:
                 continue
             if "VIII. ADDITIONAL INFORMATION OR EXPLANATIONS." in text:
-                top = page.filter(title_text_V).extract_words()[0]['bottom']
+                top = page.filter(title_text_V).extract_words()[0]["bottom"]
                 bbox = (0, top, page.width, page.height)
                 crop = page.crop(bbox=bbox)
                 text = crop.filter(title_text_reverse).extract_text()
                 addendum = addendum + "\n " + text if text else ""
 
-        empty_template['Additional Information or Explanations']['text'] = addendum
+        empty_template["Additional Information or Explanations"][
+            "text"
+        ] = addendum
 
         empty_template["page_count"] = len(pdf.pages)
         empty_template["wealth"] = None
         empty_template["msg"] = ""
         empty_template["success"] = True
-
 
     count = 0
     investments = empty_template["sections"][title]["rows"]

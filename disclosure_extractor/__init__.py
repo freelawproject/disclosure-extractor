@@ -116,8 +116,9 @@ def display_table(results: Dict) -> None:
         print(t, end="\n\n")
 
     t = PrettyTable(["Addendum"])
-    t.add_row([results['Additional Information or Explanations']['text']])
+    t.add_row([results["Additional Information or Explanations"]["text"]])
     print(t, end="\n\n")
+
 
 def process_financial_document(
     file_path=None, url=None, pdf_bytes=None, show_logs=None, resize_pdf=True

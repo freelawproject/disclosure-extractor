@@ -13,6 +13,7 @@ def title_text(obj):
         return True
     return False
 
+
 def title_text_reverse(obj):
     """
     Filter for bold text in Times-Bold font
@@ -24,6 +25,7 @@ def title_text_reverse(obj):
     ):
         return False
     return True
+
 
 def filter_bold_times(obj):
     """
