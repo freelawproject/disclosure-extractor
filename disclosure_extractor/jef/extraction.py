@@ -5,6 +5,8 @@ from typing import Dict, Tuple
 import pdfplumber
 
 from disclosure_extractor.image_processing import load_template
+from disclosure_extractor.jef.filters import filter_bold_times, title_text, \
+    title_text_V, title_text_reverse
 from disclosure_extractor.jef.utils import (
     crop_and_extract,
     get_lines,
@@ -410,3 +412,131 @@ def extract_content(filepath: str) -> Dict:
             "is_redacted": addendum_redacted,
         }
         return cd
+
+
+def get_text(page, cell, field):
+    """"""
+    redacted = False
+    if not cell:
+        return
+    crop = page.crop(cell).filter(filter_bold_times)
+    if not crop:
+        return
+    text = crop.extract_text()
+    # Check if yellow - and so not content
+    if any([x["fill"] for x in crop.rects]):
+        return
+    if not text:
+        text = ""
+
+    if field == "":
+        return text
+    if crop.curves and crop.curves[0]["fill"]:
+        redacted = True
+
+    cleaned_text = re.sub(r"\s+", " ", text).strip("")
+
+    if field in ["A", "Source", "Creditor", "Date", "Position"]:
+        cleaned_text = re.sub(r"^\d{1,4}\.", "", cleaned_text).strip()
+
+    if field == "A":
+        cleaned_text = re.sub(r"^[-]{1,4}", "", cleaned_text).strip()
+
+    return {
+        "text": cleaned_text,
+        "page_number": page.page_number,
+        "is_redacted": redacted,
+    }
+
+
+def extract_normal_pdf(filepath: str) -> Dict:
+    """"""
+
+    titles = [
+        "Positions",
+        "Agreements",
+        "Non-Investment Income",
+        "Non Investment Income Spouse",
+        "Reimbursements",
+        "Gifts",
+        "Liabilities",
+        "Investments and Trusts",
+    ]
+    empty_template = load_template()
+
+    with pdfplumber.open(filepath) as pdf:
+        pages = pdf.pages
+        for page in pages:
+            if not page.extract_text() or len(page.extract_text()) < 100:
+                return {"success": False, "msg": f"OCR required on page #{page.page_number}"}
+
+        for page in pages:
+            for table in page.debug_tablefinder().tables:
+                c = get_text(page, table.cells[0], "")
+                if c.startswith("1."):
+                    title = titles.pop(0)
+                    empty_template["sections"][title]["rows"] = []
+                if not re.match(r"\d+\.", c):
+                    continue
+                content = empty_template["sections"][title]["rows"]
+                for row in table.rows:
+                    cd = {}
+                    fields = empty_template["sections"][title]["fields"]
+                    if len(row.cells) > len(fields):
+                        cells = row.cells[1:]
+                    else:
+                        cells = row.cells
+                    for cell, field in zip(cells, fields):
+                        cd[field] = get_text(page, cell, field)
+
+                    if any([v["text"] for k, v in cd.items()]):
+                        content.append(cd)
+                empty_template["sections"][title]["rows"] = content
+        if len(titles) > 0:
+            # Unable to find all tables for this modified
+            empty_template["success"] = False
+            return empty_template
+
+        addendum = ""
+        for page in pages:
+            text = page.filter(
+                title_text).extract_text()
+            if not text:
+                continue
+            if "VIII. ADDITIONAL INFORMATION OR EXPLANATIONS." in text:
+                top = page.filter(title_text_V).extract_words()[0]['bottom']
+                bbox = (0, top, page.width, page.height)
+                crop = page.crop(bbox=bbox)
+                text = crop.filter(title_text_reverse).extract_text()
+                addendum = addendum + "\n " + text if text else ""
+
+        empty_template['Additional Information or Explanations']['text'] = addendum
+
+        empty_template["page_count"] = len(pdf.pages)
+        empty_template["wealth"] = None
+        empty_template["msg"] = ""
+        empty_template["success"] = True
+
+
+    count = 0
+    investments = empty_template["sections"][title]["rows"]
+    for investment_row in investments:
+        investment_row["A"]["inferred_value"] = False
+        if not count:
+            count += 1
+            continue
+        investement_name = investment_row["A"]["text"]
+        if (
+            not investement_name
+            and investments[count]["D1"]["text"]
+            and investment_row["D1"]["text"]
+        ):
+            empty_template["sections"][title]["rows"][count]["A"][
+                "inferred_value"
+            ] = True
+            empty_template["sections"][title]["rows"][count]["A"][
+                "text"
+            ] = investments[count - 1]["A"]["text"]
+        count += 1
+
+    return empty_template

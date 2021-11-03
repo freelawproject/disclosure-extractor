@@ -7,6 +7,7 @@ from __future__ import (
 )
 
 import os
+import pprint
 import unittest
 from unittest import TestCase
 
@@ -15,6 +16,7 @@ from disclosure_extractor import (
     extract_financial_document,
     process_jef_document,
     process_judicial_watch,
+    extract_vector_pdf,
 )
 
 
@@ -49,6 +51,7 @@ class DisclosureTests(TestCase):
         )
         self.assertTrue(results["success"], msg="Process failed")
         display_table(results)
+        pprint.pprint(results)
 
     def test_JEF_style_extraction(self):
         """Test if we can process a JEF processed PDF?"""
@@ -87,6 +90,23 @@ class DisclosureTests(TestCase):
         self.assertFalse(
             results["Additional Information or Explanations"]["is_redacted"],
             msg="Addendum redaction incorrect",
+        )
+
+
+class ExtractNormalPDF(TestCase):
+
+    root_dir = os.path.dirname(os.path.realpath(__file__))
+    assets_dir = os.path.join(root_dir, "tests", "test_assets")
+
+    def test_vector_pdf_extraction(self):
+        """Can we extract from a normal vector PDF?"""
+        pdf_path = os.path.join(self.assets_dir, "Alquist-NV-18.pdf")
+        results = extract_vector_pdf(pdf_path)
+        self.assertTrue(results["success"], msg="Extraction Failed")
+        self.assertEqual(
+            results["sections"]["Investments and Trusts"]["rows"][43]["A"]['text'],
+            "BLACKROCK STRATEGIC INCOME OPPTYS INSTL CL REINVESTMENTS BSIIX",
+            msg="Wrong Company Name",
         )
 
 

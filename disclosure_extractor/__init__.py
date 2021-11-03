@@ -12,6 +12,7 @@ from typing import Dict
 
 import requests
 from pdf2image import convert_from_bytes, convert_from_path
+from pdfminer.pdfparser import PDFSyntaxError
 from prettytable import PrettyTable
 
 from disclosure_extractor.calculate import (
@@ -24,7 +25,10 @@ from disclosure_extractor.image_processing import (
     CheckboxesNotFound,
     extract_contours_from_page,
 )
-from disclosure_extractor.jef.extraction import extract_content
+from disclosure_extractor.jef.extraction import (
+    extract_content,
+    extract_normal_pdf,
+)
 from disclosure_extractor.judicial_watch_utils import (
     extract_section_I_to_VI,
     extract_section_VII,
@@ -103,14 +107,17 @@ def display_table(results: Dict) -> None:
     :return: None
     """
     for title, sect in results["sections"].items():
-        print(title)
         fields = sect["fields"]
         t = PrettyTable(fields)
+        t.title = title
         for row in sect["rows"]:
             r = [row[field]["text"] for field in sect["fields"]]
             t.add_row(r)
         print(t, end="\n\n")
 
+    t = PrettyTable(["Addendum"])
+    t.add_row([results['Additional Information or Explanations']['text']])
+    print(t, end="\n\n")
 
 def process_financial_document(
     file_path=None, url=None, pdf_bytes=None, show_logs=None, resize_pdf=True
@@ -293,7 +300,6 @@ def extract_financial_document(
     logging.info("Extracting content from financial disclosure")
     results = process_document(document_structure, pages)
     results["page_count"] = len(pages)
-
     results["pdf_size"] = ""
     results["wealth"] = estimate_investment_net_worth(results)
     results["success"] = True
@@ -319,4 +325,19 @@ def process_jef_document(
     if calculate_wealth:
         results["wealth"] = estimate_investment_net_worth_JEF(results)
     results["success"] = True
+    return results
+
+
+def extract_vector_pdf(
+    file_path: str,
+) -> Dict:
+    """Extract content from a normal document using PDF Plumber
+
+    :param file_path:Path to the PDF
+    :return: Extracted content
+    """
+    try:
+        results = extract_normal_pdf(file_path)
+    except PDFSyntaxError:
+        results = {"success": False, "msg": "PDFSyntaxError"}
     return results
