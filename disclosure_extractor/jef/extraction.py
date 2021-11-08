@@ -504,7 +504,7 @@ def extract_normal_pdf(filepath: str) -> Dict:
             empty_template["success"] = False
             return empty_template
 
-        addendum = ""
+        addendum, redacted_addendum = "", False
         for page in pages:
             text = page.filter(title_text).extract_text()
             if not text:
@@ -513,12 +513,20 @@ def extract_normal_pdf(filepath: str) -> Dict:
                 top = page.filter(title_text_V).extract_words()[0]["bottom"]
                 bbox = (0, top, page.width, page.height)
                 crop = page.crop(bbox=bbox)
+
+                if not redacted_addendum:
+                    if crop.curves and crop.curves[0]["fill"]:
+                        redacted_addendum = True
+
                 text = crop.filter(title_text_reverse).extract_text()
                 addendum = addendum + "\n " + text if text else ""
 
         empty_template["Additional Information or Explanations"][
             "text"
         ] = addendum
+        empty_template["Additional Information or Explanations"][
+            "is_redacted"
+        ] = redacted_addendum
 
         empty_template["page_count"] = len(pdf.pages)
         empty_template["wealth"] = None

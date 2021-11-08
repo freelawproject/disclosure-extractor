@@ -110,6 +110,20 @@ class ExtractNormalPDF(TestCase):
             "BLACKROCK STRATEGIC INCOME OPPTYS INSTL CL REINVESTMENTS BSIIX",
             msg="Wrong Company Name",
         )
+        self.assertEqual(
+            results["Additional Information or Explanations"]["is_redacted"],
+            False,
+        )
+
+    def test_redaction_addendum(self):
+        """Can we identify redactions in the addendum?"""
+        pdf_path = os.path.join(self.assets_dir, "addendum-redacted.pdf")
+        results = extract_vector_pdf(pdf_path)
+        self.assertTrue(results["success"], msg="Extraction Failed")
+        self.assertEqual(
+            results["Additional Information or Explanations"]["is_redacted"],
+            True,
+        )
 
 
 if __name__ == "__main__":
