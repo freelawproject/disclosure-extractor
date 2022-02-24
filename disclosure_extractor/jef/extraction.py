@@ -446,6 +446,10 @@ def get_text(page, cell, field):
     if field == "A":
         cleaned_text = re.sub(r"^[-]{1,4}", "", cleaned_text).strip()
 
+    if field in ["B1", "C1", "C2", "D3", "D4", "Value Code"]:
+        if len(cleaned_text) > 2:
+            cleaned_text = ""
+
     return {
         "text": cleaned_text,
         "page_number": page.page_number,

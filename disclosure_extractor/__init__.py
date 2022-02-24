@@ -339,6 +339,11 @@ def extract_vector_pdf(
     """
     try:
         results = extract_normal_pdf(file_path)
+        try:
+            results["wealth"] = estimate_investment_net_worth(results)
+        except Exception as e:
+            results["wealth"] = ""
     except PDFSyntaxError:
         results = {"success": False, "msg": "PDFSyntaxError"}
+
     return results
