@@ -346,7 +346,6 @@ def extract_content(filepath: str) -> Dict:
     :type: dict
     """
     with pdfplumber.open(filepath) as pdf:
-        print(filepath)
         page_one = pdf.pages[0].extract_text()
         cd = load_template()
 
@@ -381,7 +380,7 @@ def extract_content(filepath: str) -> Dict:
                     output = page.crop(bbox=bbox).extract_text()
                     if not redacted:
                         redacted = (
-                            True if page.crop(bbox=bbox).curves else False
+                            True if page.crop(bbox=bbox).rects else False
                         )
                     if output:
                         output = output.replace("\n", " ").strip()
@@ -435,7 +434,7 @@ def get_text(page, cell, field):
 
     if field == "":
         return text
-    if crop.curves and crop.curves[0]["fill"]:
+    if crop.rects and crop.rects[0]["fill"]:
         redacted = True
 
     cleaned_text = re.sub(r"\s+", " ", text).strip("")
@@ -449,7 +448,6 @@ def get_text(page, cell, field):
     if field in ["B1", "C1", "C2", "D3", "D4", "Value Code"]:
         if len(cleaned_text) > 2:
             cleaned_text = ""
-
     return {
         "text": cleaned_text,
         "page_number": page.page_number,
@@ -517,9 +515,8 @@ def extract_normal_pdf(filepath: str) -> Dict:
                 top = page.filter(title_text_V).extract_words()[0]["bottom"]
                 bbox = (0, top, page.width, page.height)
                 crop = page.crop(bbox=bbox)
-
                 if not redacted_addendum:
-                    if crop.curves and crop.curves[0]["fill"]:
+                    if crop.rects and crop.rects[0]["fill"]:
                         redacted_addendum = True
 
                 text = crop.filter(title_text_reverse).extract_text()

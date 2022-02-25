@@ -31,7 +31,9 @@ def filter_bold_times(obj):
     """
     Filter for bold text in Times-Bold font
     """
-    if obj.get("fontname", None) == "Times-Bold" or obj.get("size", 0) < 8:
+    if obj.get("fontname") == "Times-Bold":
+        return False
+    if obj.get("size", 0) < 7.9:
         return False
     return True
 
