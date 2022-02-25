@@ -12,6 +12,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 with open("requirements.txt") as f:
     required = re.findall(r"([A-z].*=[0-9.]+)", f.read())
 
+
 def read(*parts):
     """
     Build an absolute path from *parts* and and return the contents of the
