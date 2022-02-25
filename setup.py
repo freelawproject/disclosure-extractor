@@ -1,14 +1,16 @@
 import codecs
 import os
+import re
+
 from setuptools import setup, find_packages
 
-VERSION = "0.0.58"
+VERSION = "0.0.59"
 AUTHOR = "Free Law Project"
 EMAIL = "info@free.law"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 with open("requirements.txt") as f:
-    required = f.read().splitlines()
+    required = re.findall(r"([A-z].*=[0-9.]+)", f.read())
 
 def read(*parts):
     """
