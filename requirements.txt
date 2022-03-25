@@ -19,3 +19,6 @@ six==1.16.0
 sortedcontainers==2.2.2
 urllib3==1.25.10
 wand==0.6.7
+requests >= 2.20
+python_version >= 3.0
+setuptools >= 41.0.1
