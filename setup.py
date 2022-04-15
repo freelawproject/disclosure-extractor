@@ -4,7 +4,7 @@ import re
 
 from setuptools import setup, find_packages
 
-VERSION = "0.0.59"
+VERSION = "0.0.60"
 AUTHOR = "Free Law Project"
 EMAIL = "info@free.law"
 HERE = os.path.abspath(os.path.dirname(__file__))
