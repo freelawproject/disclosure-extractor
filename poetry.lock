@@ -321,11 +321,11 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pypdf2"
-version = "1.26.0"
-description = "PDF toolkit"
+version = "1.27.5"
+description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7"
 
 [[package]]
 name = "pytesseract"
@@ -468,7 +468,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "273eceef541a32e04497aecb908ca1a0210b25e4947a91ae55d1bd0805cec208"
+content-hash = "e929b9c6c6102b821729530ebfa4ad55832e8c341fea78c42cd7833dda5c3df2"
 
 [metadata.files]
 argcomplete = [
@@ -758,7 +758,8 @@ pyparsing = [
     {file = "pyparsing-3.0.7.tar.gz", hash = "sha256:18ee9022775d270c55187733956460083db60b37d0d0fb357445f3094eed3eea"},
 ]
 pypdf2 = [
-    {file = "PyPDF2-1.26.0.tar.gz", hash = "sha256:e28f902f2f0a1603ea95ebe21dff311ef09be3d0f0ef29a3e44a932729564385"},
+    {file = "PyPDF2-1.27.5-py3-none-any.whl", hash = "sha256:9c81fc06be50fbf2e6199e8c2eac05f3eaafae4b3905ecca41200f5b02ac43d7"},
+    {file = "PyPDF2-1.27.5.tar.gz", hash = "sha256:7c18c1d48e56547b1c33f772dc15d6adbd1f4020b62e64bb4a0bc0ee2ab94511"},
 ]
 pytesseract = [
     {file = "pytesseract-0.3.5.tar.gz", hash = "sha256:54889a23d38af0e26ac3887895e28eb506d761cdcebc3383fe9d39f678f365f5"},
